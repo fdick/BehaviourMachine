@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace BehaviourGraph.Visualizer
 {
@@ -18,8 +19,11 @@ namespace BehaviourGraph.Visualizer
     public class VisualizedLink : MonoBehaviour
     {
         public LinkType linkType;
-        public VisualizedBranch[] froms;
-        public VisualizedBranch to;
+        //public VisualizedHierarchyBranch[] froms;
+        //public VisualizedHierarchyBranch to;
+
+        [FormerlySerializedAs("froms2")] public VisualizedLeaf[] froms;
+        [FormerlySerializedAs("to2")] public VisualizedLeaf to;
         public VisualizedCondition condition;
         
         [InspectorButton("Add Condition")]

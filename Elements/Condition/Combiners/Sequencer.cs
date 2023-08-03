@@ -23,15 +23,15 @@ namespace BehaviourGraph.Conditions
             }
         }
 
-        public override LeafStatus OnUpdate()
+        public override UpdateStatus OnUpdate()
         {
             foreach (var c in Conditions)
             {
-                if (c.OnUpdate() == LeafStatus.Failure)
-                    return LeafStatus.Failure;
+                if (c.OnUpdate() == UpdateStatus.Failure)
+                    return UpdateStatus.Failure;
             }
 
-            return LeafStatus.Successed;
+            return UpdateStatus.Successed;
         }
     }
 }

@@ -6,6 +6,6 @@ namespace BehaviourGraph
     public interface IConditional 
     {
         public string FriendlyName { get; set; }
-        public LeafStatus OnUpdate();
+        public UpdateStatus OnUpdate();
     }
 }

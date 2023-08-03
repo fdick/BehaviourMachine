@@ -3,6 +3,11 @@ using UnityEngine;
 
 namespace BehaviourGraph.Trees
 {
+    /// <summary>
+    /// This branch processes its leaves in parallel. Two or more processes can be running at the same time.
+    /// The branch contains one main process and may contain two or more processes that will run simultaneously
+    /// and in parallel with the main process. The tree will end when the main process ends. Can be a leaf and a tree. Need dispose after finishing.
+    /// </summary>
     public class ParallelBranch : ParallelTree, ILeaf, IDisposable
     {
         public ParallelBranch(AIBehaviourGraph graph, ILeaf mainLeaf, params ILeaf[] parallelLeafs) : base(graph, mainLeaf, parallelLeafs)
@@ -39,7 +44,7 @@ namespace BehaviourGraph.Trees
         }
 
 
-        public LeafStatus OnUpdate()
+        public UpdateStatus OnUpdate()
         {
             return UpdateTree();
         }

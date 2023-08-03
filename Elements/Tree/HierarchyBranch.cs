@@ -4,7 +4,7 @@ using UnityEngine;
 namespace BehaviourGraph.Trees
 {
     /// <summary>
-    /// Branch can be a leaf and can be a tree. Can be added to childs to other tree.
+    /// This branch processes its leaves hierarchically. Only one process can run at a time. Can be a leaf and a tree. Need dispose after finishing.
     /// </summary>
     public class HierarchyBranch : HierarchyTree, ILeaf
     {
@@ -18,12 +18,12 @@ namespace BehaviourGraph.Trees
 
         public Action<ConditionData> OnStarting { get; set; }
         public Action OnEnded { get; set; }
-        protected GameObject gameObject;
+        protected GameObject _gameObject;
         private float _lastProcCD;
 
 
         /// <summary>
-        /// Called when inin Behaviour Graph
+        /// Called when init Behaviour Graph
         /// </summary>
         public void OnAwake()
         {
@@ -46,12 +46,12 @@ namespace BehaviourGraph.Trees
         }
 
 
-        public virtual LeafStatus OnUpdate()
+        public virtual UpdateStatus OnUpdate()
         {
             return UpdateTree();
         }
 
-        public void SetGameobject(GameObject go) => gameObject = go;
+        public void SetGameobject(GameObject go) => _gameObject = go;
 
         public override void Dispose()
         {

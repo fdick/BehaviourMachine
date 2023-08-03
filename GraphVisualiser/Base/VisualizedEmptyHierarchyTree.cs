@@ -1,26 +1,19 @@
-using BehaviourGraph.Trees;
-using System.Collections;
+﻿using BehaviourGraph.Trees;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace BehaviourGraph.Visualizer
 {
-
-    public class VisualizedEmptyBranch : VisualizedBranch
+    [Serializable]
+    public class VisualizedEmptyHierarchyTree : VisualizedTree
     {
-        public List<VisualizedBranch> leafs;
+        public List<VisualizedLeaf> leafs;
         public List<VisualizedLink> links = new List<VisualizedLink>();
         public int startableLeaf_ID = 0;
 
         private string _visLeafsName = "Leafs";
         private string _visLinkName = "Links";
-
-
-        public override HierarchyBranch GetInstance(AIBehaviourGraph graph)
-        {
-            return new HierarchyBranch(graph);
-        }
 
         [InspectorButton("Add Link")]
         public void AddVisualizedLink()
@@ -69,7 +62,7 @@ namespace BehaviourGraph.Visualizer
             }
 
             var go = new GameObject("Branch1");
-            VisualizedEmptyBranch branchComp = (VisualizedEmptyBranch)go.AddComponent(typeof(VisualizedEmptyBranch));
+            VisualizedEmptyHierarchyBranch branchComp = (VisualizedEmptyHierarchyBranch)go.AddComponent(typeof(VisualizedEmptyHierarchyBranch));
             go.transform.SetParent(parent.transform);
             go.transform.localPosition = Vector3.zero;
 
@@ -94,7 +87,7 @@ namespace BehaviourGraph.Visualizer
         {
             leafs.Clear();
 
-            List<VisualizedBranch> ls = new List<VisualizedBranch>();
+            List<VisualizedEmptyHierarchyBranch> ls = new List<VisualizedEmptyHierarchyBranch>();
             foreach (Transform c in transform)
             {
                 if (c.name == _visLeafsName)
@@ -102,7 +95,7 @@ namespace BehaviourGraph.Visualizer
                     for (int i = 0; i < c.childCount; i++)
                     {
                         var c2 = c.GetChild(i);
-                        if (c2.TryGetComponent<VisualizedBranch>(out var outLeaf))
+                        if (c2.TryGetComponent<VisualizedEmptyHierarchyBranch>(out var outLeaf))
                             ls.Add(outLeaf);
                     }
                 }
@@ -115,7 +108,7 @@ namespace BehaviourGraph.Visualizer
                     for (int i = 0; i < cL.childCount; i++)
                     {
                         var c2 = cL.GetChild(i);
-                        if (c2.TryGetComponent<VisualizedBranch>(out var outLeaf))
+                        if (c2.TryGetComponent<VisualizedEmptyHierarchyBranch>(out var outLeaf))
                             ls.Add(outLeaf);
                     }
                 }
@@ -126,8 +119,64 @@ namespace BehaviourGraph.Visualizer
 
             leafs.AddRange(ls);
 
-         
+
         }
 
+
+        public override ITree GetInstance(AIBehaviourGraph graph)
+        {
+            //add leafs
+            var lfs = new ILeaf[leafs.Count];
+            for (int i = 0; i < leafs.Count; i++)
+            {
+                //if child leaf is tree
+                if (leafs[i] is IVisualizedTree lt)
+                {
+                    var childTree = lt.GetInstance(graph);
+
+                    lfs[i] = (ILeaf)childTree;
+                }
+                else
+                {
+                    lfs[i] = leafs[i].GetInstance();
+                }
+                lfs[i].OnAwake();
+
+                //set custom name
+                if (leafs[i].FriendlyName != string.Empty)
+                    lfs[i].FriendlyName = leafs[i].FriendlyName;
+            }
+
+            var instance = new HierarchyBranch(graph, lfs);
+
+            //add links
+            foreach (var li in links)
+            {
+                for (int i = 0; i < li.froms.Length; i++)
+                {
+                    var from = instance.Leafs[leafs.IndexOf(li.froms[i])];
+                    var to = instance.Leafs[leafs.IndexOf(li.to)];
+
+                    if (li.linkType == Visualizer.LinkType.FromTo)
+                        instance.Link(
+                            from,
+                            to,
+                            li.condition.GetInstance(instance));
+                    else if (li.linkType == Visualizer.LinkType.Ended)
+                        instance.Link(
+                            from,
+                            to);
+                    else
+                        instance.Link(
+                            to,
+                            li.condition.GetInstance(instance));
+                }
+            }
+
+            //set startable leaf
+            instance.StartableLeaf = instance.Leafs[startableLeaf_ID];
+
+            return instance;
+        }
     }
 }

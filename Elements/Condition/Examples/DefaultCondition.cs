@@ -11,9 +11,9 @@ namespace BehaviourGraph.Conditions
 
         public string FriendlyName { get; set; }
 
-        public virtual LeafStatus OnUpdate()
+        public virtual UpdateStatus OnUpdate()
         {
-            return LeafStatus.Failure;
+            return UpdateStatus.Failure;
         }
     }
 }

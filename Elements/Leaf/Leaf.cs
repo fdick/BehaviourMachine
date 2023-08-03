@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using BehaviourGraph.Trees;
 using UnityEngine;
 
@@ -8,6 +7,7 @@ namespace BehaviourGraph
     public class Leaf : ILeaf, IDisposable
     {
         public string FriendlyName { get; set; } = "Leaf";
+        public bool IsActive { get; protected set; }
         protected GameObject gameObject;
         private float _lastProcCD;
 
@@ -29,17 +29,18 @@ namespace BehaviourGraph
         public virtual void OnStart(ConditionData condData)
         {
             OnStarting?.Invoke(condData);
-            _lastProcCD = Time.time;
+            IsActive = true;
         }
 
 
-        public virtual LeafStatus OnUpdate()
+        public virtual UpdateStatus OnUpdate()
         {
-            return LeafStatus.Failure;
+            return UpdateStatus.Failure;
         }
 
         public virtual void OnEnd()
         {
+            _lastProcCD = Time.time;
             OnEnded?.Invoke();
         }
 
@@ -56,7 +57,7 @@ namespace BehaviourGraph
 
         public bool CheckCD(float duration)
         {
-            return Time.time >= _lastProcCD + duration || _lastProcCD == 0;
+            return !IsActive && (Time.time >= _lastProcCD + duration || _lastProcCD == 0);
         }
     }
 }

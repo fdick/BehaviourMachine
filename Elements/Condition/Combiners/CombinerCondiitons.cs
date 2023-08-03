@@ -7,6 +7,6 @@ namespace BehaviourGraph.Conditions
         public string FriendlyName { get; set; }
         public List<IConditional> Conditions { get; protected set; }
 
-        public abstract LeafStatus OnUpdate();
+        public abstract UpdateStatus OnUpdate();
     }
 }

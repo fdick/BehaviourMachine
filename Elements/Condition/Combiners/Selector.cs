@@ -12,19 +12,25 @@ namespace BehaviourGraph.Conditions
         {
             Conditions = conditions.ToList();
 
-            FriendlyName = "Selector: ";
-            foreach (var c in Conditions)
-                FriendlyName += c.FriendlyName + " - ";
+            FriendlyName = "[ ";
+            for (int i = 0; i < Conditions.Count; i++)
+            {
+                if (i > 0)
+                    FriendlyName += " || ";
+                FriendlyName += Conditions[i].FriendlyName;
+                if (i == Conditions.Count - 1)
+                    FriendlyName += " ]";
+            }
         }
 
-        public override LeafStatus OnUpdate()
+        public override UpdateStatus OnUpdate()
         {
             foreach (var c in Conditions)
             {
-                if (c.OnUpdate() == LeafStatus.Successed)
-                    return LeafStatus.Successed;
+                if (c.OnUpdate() == UpdateStatus.Successed)
+                    return UpdateStatus.Successed;
             }
-            return LeafStatus.Failure;
+            return UpdateStatus.Failure;
         }
     }
 }

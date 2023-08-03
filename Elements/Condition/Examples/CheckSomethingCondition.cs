@@ -11,9 +11,9 @@ namespace BehaviourGraph.Conditions
 
         private Func<bool> _onCheckCondition;
 
-        public override LeafStatus OnUpdate()
+        public override UpdateStatus OnUpdate()
         {
-            return _onCheckCondition?.Invoke() == true ? LeafStatus.Successed : LeafStatus.Failure;
+            return _onCheckCondition?.Invoke() == true ? UpdateStatus.Successed : UpdateStatus.Failure;
         }
 
         public void Dispose()

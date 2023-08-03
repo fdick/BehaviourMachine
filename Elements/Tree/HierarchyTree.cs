@@ -1,3 +1,4 @@
+using BehaviourGraph.Debug;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,11 +24,9 @@ namespace BehaviourGraph.Trees
 
 
     /// <summary>
-    /// —тейт машина не €вл€етс€ стейтом. “о есть не может находитьс€ с остальными стейтами в одном списке.
-    /// «апускает стейт, который идет первый в очереди. ѕриоритет условий линейный - условие, что первое было прописано имеет высший приоритет по сравнению с тем,
-    /// что прописано было позже.
+    /// This tree processes its leaves hierarchically. Only one process can run at a time. Need dispose after finishing.
     /// </summary>
-    public class HierarchyTree : ITree, IDisposable
+    public class HierarchyTree : ITree, IDisposable, IDebugBreakpoint
     {
         protected List<ILeaf> _leafs = new List<ILeaf>();
         protected List<ITree> _childTrees = new List<ITree>();
@@ -55,10 +54,6 @@ namespace BehaviourGraph.Trees
         /// </summary>
         public ILeaf EndedRunningLeaf { get; protected set; }
 
-        /// <summary>
-        /// Leaf which was paused
-        /// </summary>
-        public ILeaf PausedLeaf { get; protected set; }
 
         public Dictionary<ILeaf, ILeaf> EndLinks
         {
@@ -88,20 +83,25 @@ namespace BehaviourGraph.Trees
 
         public string FriendlyName { get; set; }
 
-        /// <summary>
-        /// Calls  when active leaf was changed but not started.
-        /// </summary>
-        public Action<ITree> OnChangedLastActiveLeaf { get; set; }
+        ///// <summary>
+        ///// Calls  when active leaf was changed but not started.
+        ///// </summary>
+        //public Action<ITree> OnChangedLastActiveLeaf { get; set; }
+
+        ///// <summary>
+        ///// Calls when my child is changing. From - To - from Status
+        ///// </summary>
+        //public Action<ILeaf, ILeaf, LeafStatus> OnChangeActiveLeaf { get; set; }
+
+        ///// <summary>
+        ///// Calls when any child is changing. Tree - From leaf - To leaf - from Status
+        ///// </summary>
+        //public Action<ITree, ILeaf, ILeaf, LeafStatus> OnChangeLastActiveLeaf { get; set; }
 
         /// <summary>
-        /// Calls when my child is changing. From - To - from Status
+        /// Calls when running leaf is changing. ILeaf param is a new leaf.
         /// </summary>
-        public Action<ILeaf, ILeaf, LeafStatus> OnChangeActiveLeaf { get; set; }
-
-        /// <summary>
-        /// Calls when any child is changing. Tree - From leaf - To leaf - from Status
-        /// </summary>
-        public Action<ITree, ILeaf, ILeaf, LeafStatus> OnChangeLastActiveLeaf { get; set; }
+        public Action<ILeaf> OnChangeRunningLeaf { get; set; }
 
         /// <summary>
         /// Calls when proc any condition. Return proced condition
@@ -113,16 +113,22 @@ namespace BehaviourGraph.Trees
         /// </summary>
         public Action<GUID> OnExecuteLink { get; set; }
 
+        public bool IsPaused { get; private set; }
+
+        public Action Breakpoint { get; set; }
+
+        public UpdateStatus Status { get; private set; } = UpdateStatus.Failure;
+
         public HierarchyTree(AIBehaviourGraph graph, ILeaf[] leafs)
         {
+            _parentGraph = graph;
+
+            FriendlyName = ToString().Split('.').Last();
+
             for (int i = 0; i < leafs.Length; i++)
             {
                 AddLeaf(leafs[i]);
             }
-
-            _parentGraph = graph;
-
-            FriendlyName = ToString().Split('.').Last();
         }
 
         public HierarchyTree(AIBehaviourGraph graph)
@@ -137,13 +143,16 @@ namespace BehaviourGraph.Trees
             if (StartableLeaf == null)
                 return;
 
-            ChangeRunningLeaf(StartableLeaf, LeafStatus.Successed, null);
+            ChangeRunningLeaf(StartableLeaf, null);
         }
 
-        public LeafStatus UpdateTree()
+        public UpdateStatus UpdateTree()
         {
+            if (IsPaused)
+                return UpdateStatus.Failure;
+
             if (RunningLeaf == null)
-                return LeafStatus.Failure;
+                return UpdateStatus.Failure;
 
             var status = RunningLeaf.OnUpdate();
 
@@ -156,11 +165,12 @@ namespace BehaviourGraph.Trees
                     {
                         if (RunningLeaf == d.Key)
                             continue;
-                        if (c.condition.OnUpdate() == LeafStatus.Successed)
+                        if (c.condition.OnUpdate() == UpdateStatus.Successed)
                         {
                             OnProcCondiiton?.Invoke(c.condition);
                             OnExecuteLink?.Invoke(c.ID);
-                            ChangeRunningLeaf(d.Key, status, c);
+                            ChangeRunningLeaf(d.Key, c);
+                            Status = status;
                             return status;
                         }
                     }
@@ -174,11 +184,12 @@ namespace BehaviourGraph.Trees
                 {
                     foreach (var c in d.Value)
                     {
-                        if (c.condition.OnUpdate() == LeafStatus.Successed)
+                        if (c.condition.OnUpdate() == UpdateStatus.Successed)
                         {
                             OnProcCondiiton?.Invoke(c.condition);
                             OnExecuteLink?.Invoke(c.ID);
-                            ChangeRunningLeaf(d.Key, status, c);
+                            ChangeRunningLeaf(d.Key, c);
+                            Status = status;
                             return status;
                         }
                     }
@@ -186,17 +197,18 @@ namespace BehaviourGraph.Trees
             }
 
             //end link update
-            if (status == LeafStatus.Successed &&
+            if (status == UpdateStatus.Successed &&
                 _endLinks.TryGetValue(RunningLeaf, out var toLeaf))
             {
                 OnProcCondiiton?.Invoke(null);
-                ChangeRunningLeaf(toLeaf, status, null);
+                ChangeRunningLeaf(toLeaf, null);
+                Status = status;
                 return status;
             }
 
+            Status = status;
             return status;
         }
-
 
         public void EndTree()
         {
@@ -206,17 +218,12 @@ namespace BehaviourGraph.Trees
 
         public void PauseTree()
         {
-            PausedLeaf = RunningLeaf;
-            AbortRunningLeaf();
+            IsPaused = true;
         }
 
         public void UnPauseTree()
         {
-            if (PausedLeaf == null)
-                return;
-
-            ApplyRunningLeaf(PausedLeaf);
-            RunningLeaf.OnStart();
+            IsPaused = false;
         }
 
         public void AddLeaf(ILeaf leaf)
@@ -229,13 +236,13 @@ namespace BehaviourGraph.Trees
             leaf.SetGameobject(_parentGraph.CustomGameobject);
             _leafs.Add(leaf);
 
-            if (leaf is HierarchyBranch)
-            {
-                var leafTree = leaf as HierarchyBranch;
+            //if (leaf is HierarchyBranch)
+            //{
+            //    var leafTree = leaf as HierarchyBranch;
 
-                leafTree.OnChangeLastActiveLeaf += (q, w, e, r) => OnChangeLastActiveLeaf?.Invoke(q, w, e, r);
-                leafTree.OnChangedLastActiveLeaf += (t) => OnChangedLastActiveLeaf?.Invoke(t);
-            }
+            //    leafTree.OnChangeLastActiveLeaf += (q, w, e, r) => OnChangeLastActiveLeaf?.Invoke(q, w, e, r);
+            //    leafTree.OnChangedLastActiveLeaf += (t) => OnChangedLastActiveLeaf?.Invoke(t);
+            //}
         }
 
         public void RemoveLeaf(ILeaf leaf)
@@ -381,11 +388,20 @@ namespace BehaviourGraph.Trees
 
         public virtual void Dispose()
         {
-            OnChangedLastActiveLeaf = null;
-            OnChangeLastActiveLeaf = null;
-            OnChangeActiveLeaf = null;
+            foreach (var l in _leafs)
+            {
+                if (l is IDisposable tDis)
+                    tDis.Dispose();
+            }
+
+            EndLinks.Clear();
+            GlobalLinks.Clear();
+            LocalLinks.Clear();
+
+            OnChangeRunningLeaf = null;
             OnProcCondiiton = null;
             OnExecuteLink = null;
+            Breakpoint = null;
         }
 
         public ILeaf[] GetLeafs() => Leafs.ToArray();
@@ -410,19 +426,16 @@ namespace BehaviourGraph.Trees
             EndedRunningLeaf = leaf;
         }
 
-        private void ChangeRunningLeaf(ILeaf newLeaf, LeafStatus previewsLeafStatus, ConditionData conditionData)
+        private void ChangeRunningLeaf(ILeaf newLeaf, ConditionData conditionData)
         {
-            OnChangeActiveLeaf?.Invoke(RunningLeaf, newLeaf, previewsLeafStatus);
-            if (RunningLeaf is ILeaf)
-                OnChangeLastActiveLeaf?.Invoke(this, RunningLeaf, newLeaf, previewsLeafStatus);
-            
+            //UnityEngine.Debug.Log($"Change {_parentGraph.transform.parent.name} - from: {RunningLeaf?.FriendlyName} - to: {newLeaf?.FriendlyName}");
+            Breakpoint?.Invoke();
+            OnChangeRunningLeaf?.Invoke(newLeaf);
+
             AbortRunningLeaf();
             ApplyRunningLeaf(newLeaf);
 
             RunningLeaf.OnStart(conditionData);
-            
-            if (RunningLeaf is ILeaf)
-                OnChangedLastActiveLeaf?.Invoke(this);
         }
     }
 }

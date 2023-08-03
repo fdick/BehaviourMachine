@@ -7,12 +7,12 @@ using UnityEngine;
 
 namespace BehaviourGraph.Visualizer
 {
-    public static class VisualizatorGenerator 
+    public static class VisualizedLeafGenerator 
     {
         private const string TAB = "    ";
 
 
-        [MenuItem("CustomTools/AIBehaviourGraph/Generate Visualized Object")]
+        [MenuItem("CustomTools/AIBehaviourGraph/Create Visualized Leaf")]
         public static void Generate()
         {
             if (Selection.activeObject == null)

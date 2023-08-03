@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace BehaviourGraph
 {
-    public enum LeafStatus
+    public enum UpdateStatus
     {
         Successed,
         Failure,
@@ -17,10 +17,15 @@ namespace BehaviourGraph
         public void OnAwake();
         public void OnStart(ConditionData activatedLink = null);
         public void OnEnd();
-        public LeafStatus OnUpdate();
+        public UpdateStatus OnUpdate();
         public void SetGameobject(GameObject go);
         public bool CheckCD(float duration);
 
+        public string FriendlyName { get; set; }
+    }
+
+    public interface IHasFriendlyName
+    {
         public string FriendlyName { get; }
     }
 }

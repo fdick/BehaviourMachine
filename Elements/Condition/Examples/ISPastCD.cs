@@ -12,8 +12,8 @@ public class ISPastCD : DefaultCondition
     private ILeaf _leaf;
     private float _duration;
 
-    public override LeafStatus OnUpdate()
+    public override UpdateStatus OnUpdate()
     {
-        return _leaf.CheckCD(_duration) ? LeafStatus.Successed : LeafStatus.Failure;
+        return _leaf.CheckCD(_duration) ? UpdateStatus.Successed : UpdateStatus.Failure;
     }
 }

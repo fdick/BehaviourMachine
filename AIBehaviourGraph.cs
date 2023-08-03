@@ -1,4 +1,3 @@
-using System;
 using BehaviourGraph.Trees;
 using BehaviourGraph.Visualizer;
 using System.Collections;
@@ -14,23 +13,38 @@ namespace BehaviourGraph
         CustomTick,
     }
 
+    public enum DebugModes
+    {
+        Disabled,
+        Enabled,
+        DetailedDebug
+    }
+
+    public enum GraphStatuses
+    {
+        None,
+        Inited,
+        Ended,
+        Started,
+        Paused
+    }
+
     public class AIBehaviourGraph : MonoBehaviour
     {
         [SerializeField] private bool _startGraphOnStart = false;
         [SerializeField] private GraphUpdateType _updateType;
         [SerializeField] private float _tickValue = 0.1f;
         [field: SerializeField] public GameObject CustomGameobject;
-        public HierarchyTree MainTree { get; private set; }
-        [field: SerializeField] public VisualizedBranch VisualizeTree { get; private set; }
-        private Coroutine _updatorCoro;
+        [field: SerializeField] public VisualizedEmptyHierarchyTree VisualizedTree { get; private set; }
+        [field: SerializeField] public GraphStatuses GraphStatus { get; private set; }
 
+        public HierarchyTree MainTree { get; private set; }
+        private Coroutine _updatorCoro;
         readonly string visRootTreeName = "VisualizedRootTree";
 
-        [Space] [SerializeField] private bool _enableDebug = true;
-        [SerializeField] private bool _enableDebugMode = false;
+        [field: Space]
+        [field: SerializeField] public DebugModes DebugMode { get; private set; }
         [SerializeField] private Debug.GraphDebuger _debug;
-
-        public bool IsStarted { get; private set; } = false;
 
         private void Awake()
         {
@@ -50,21 +64,24 @@ namespace BehaviourGraph
 
         private void OnDestroy()
         {
-            if (!IsStarted)
+            if (GraphStatus == GraphStatuses.Ended)
                 return;
-            if (_enableDebug)
+            if (DebugMode >= DebugModes.Enabled)
                 _debug.StopUpdator();
             DealocateGraph();
         }
 
         public void StartGraph()
         {
-            if (IsStarted)
+            if (GraphStatus != GraphStatuses.Inited)
                 return;
 #if UNITY_EDITOR
-            if (_enableDebug)
+            if (DebugMode >= DebugModes.Enabled)
             {
-                _debug = new Debug.GraphDebuger(this, _enableDebugMode);
+                _debug = new Debug.GraphDebuger(
+                    this,
+                    DebugMode == DebugModes.DetailedDebug ? true : false);
+
                 _debug.StartUpdator();
             }
 #endif
@@ -72,121 +89,68 @@ namespace BehaviourGraph
             MainTree.StartTree();
             //start update graph
             StartUpdator();
-            IsStarted = true;
+            GraphStatus = GraphStatuses.Started;
         }
 
         public void StopGraph()
         {
-            if (!IsStarted)
+            if (GraphStatus != GraphStatuses.Started || GraphStatus != GraphStatuses.Paused)
                 return;
+            if (GraphStatus == GraphStatuses.Paused)
+                UnPauseGraph();
+
             MainTree.EndTree();
             StopUpdator();
-            IsStarted = false;
+            GraphStatus = GraphStatuses.Ended;
         }
 
         public void PauseGraph()
         {
+            if (GraphStatus != GraphStatuses.Started)
+                return;
+
+            MainTree.PauseTree();
+
+            GraphStatus = GraphStatuses.Paused;
         }
 
         public void UnPauseGraph()
         {
+            if (GraphStatus != GraphStatuses.Paused)
+                return;
+
+            MainTree.UnPauseTree();
+
+            GraphStatus = GraphStatuses.Paused;
         }
 
         public void DealocateGraph()
         {
-            StopGraph();
-            MainTree.Dispose();
-            MainTree = null;
-            VisualizeTree = null;
+            if (GraphStatus >= GraphStatuses.Ended)
+                StopGraph();
+
+            if (GraphStatus >= GraphStatuses.Inited)
+            {
+                MainTree.Dispose();
+                MainTree = null;
+                VisualizedTree = null;
+            }
+
+            GraphStatus = GraphStatuses.None;
         }
 
         public void InitGraph()
         {
-            if (VisualizeTree != null)
-            {
-                MainTree = InitVisualizedTree(VisualizeTree);
-                if (MainTree == null)
-                    UnityEngine.Debug.LogError("Init visualized tree has errors!");
-                MainTree.FriendlyName = "RootTree";
-            }
-        }
+            if (VisualizedTree == null || GraphStatus > GraphStatuses.None)
+                return;
 
-        private HierarchyBranch InitVisualizedTree(VisualizedBranch branch)
-        {
-            if (branch is VisualizedEmptyBranch emptyBranch)
-            {
-                var tree = new HierarchyBranch(this);
+            MainTree = (HierarchyTree)VisualizedTree.GetInstance(this);
 
-                //add leafs
-                foreach (var l in emptyBranch.leafs)
-                {
-                    Leaf cLeaf = default;
-                    HierarchyBranch cBranch = default;
-                    if (l is VisualizedLeaf ll)
-                    {
-                        cLeaf = ll.GetInstance();
-                        tree.AddLeaf(cLeaf);
-                    }
-                    else
-                    {
-                        cBranch = l.GetInstance(this);
-                        tree.AddLeaf(cBranch);
-                    }
+            if (MainTree == null)
+                UnityEngine.Debug.LogError("Init visualized tree has errors!");
+            MainTree.FriendlyName = "RootTree";
 
-                    if (l.FriendlyName != String.Empty)
-                    {
-
-                        if (cLeaf != null)
-                            cLeaf.FriendlyName = l.FriendlyName;
-                        else
-                            cBranch.FriendlyName = l.FriendlyName;
-                    }
-                        
-                }
-
-                //set startable leaf
-                tree.StartableLeaf = tree.Leafs[emptyBranch.startableLeaf_ID];
-
-                //add links
-                foreach (var li in emptyBranch.links)
-                {
-                    for (int i = 0; i < li.froms.Length; i++)
-                    {
-                        var from = tree.Leafs[emptyBranch.leafs.IndexOf(li.froms[i])];
-                        var to = tree.Leafs[emptyBranch.leafs.IndexOf(li.to)];
-
-                        if (li.linkType == Visualizer.LinkType.FromTo)
-                            tree.Link(
-                                from,
-                                to,
-                                li.condition.GetInstance(tree));
-                        else if (li.linkType == Visualizer.LinkType.Ended)
-                            tree.Link(
-                                from,
-                                to);
-                        else
-                            tree.Link(
-                                to,
-                                li.condition.GetInstance(tree));
-                    }
-                }
-
-                for (int i = 0; i < emptyBranch.leafs.Count; i++)
-                {
-                    var vl = emptyBranch.leafs[i];
-
-                    if (vl is VisualizedEmptyBranch)
-                        tree.Leafs[i] = InitVisualizedTree(vl);
-                }
-
-                return tree;
-            }
-            else if (branch is VisualizedBranch)
-            {
-                return branch.GetInstance(this);
-            }
-
-            return null;
+            GraphStatus = GraphStatuses.Inited;
         }
 
         private void StartUpdator()
@@ -241,11 +205,11 @@ namespace BehaviourGraph
             if (!transform.Find(visRootTreeName))
             {
                 var root = new GameObject(visRootTreeName);
-                VisualizedEmptyBranch visTree = (VisualizedEmptyBranch)root.AddComponent(typeof(VisualizedEmptyBranch));
+                VisualizedEmptyHierarchyTree visTree = (VisualizedEmptyHierarchyTree)root.AddComponent(typeof(VisualizedEmptyHierarchyTree));
                 root.transform.SetParent(transform);
                 root.transform.localPosition = Vector3.zero;
 
-                VisualizeTree = visTree;
+                VisualizedTree = visTree;
             }
         }
     }

@@ -11,9 +11,9 @@ namespace BehaviourGraph.Conditions
         private IConditional _originCondition;
         public string FriendlyName { get; set; }
 
-        public LeafStatus OnUpdate()
+        public UpdateStatus OnUpdate()
         {
-            return _originCondition.OnUpdate() == LeafStatus.Successed ? LeafStatus.Failure : LeafStatus.Successed;
+            return _originCondition.OnUpdate() == UpdateStatus.Successed ? UpdateStatus.Failure : UpdateStatus.Successed;
         }
     }
 }

@@ -10,9 +10,9 @@
         
         private ILeaf _leaf;
 
-        public override LeafStatus OnUpdate()
+        public override UpdateStatus OnUpdate()
         {
-            return _leaf.OnUpdate() == LeafStatus.Successed ? LeafStatus.Successed : LeafStatus.Failure;
+            return _leaf.OnUpdate() == UpdateStatus.Successed ? UpdateStatus.Successed : UpdateStatus.Failure;
         }
     }
 }
