@@ -8,7 +8,7 @@ namespace BehaviourGraph.Visualizer
     [Serializable]
     public class VisualizedEmptyHierarchyTree : VisualizedTree
     {
-        public List<VisualizedLeaf> leafs;
+        public List<VisualizedLeaf> leafs = new List<VisualizedLeaf>();
         public List<VisualizedLink> links = new List<VisualizedLink>();
         public int startableLeaf_ID = 0;
 
@@ -87,7 +87,6 @@ namespace BehaviourGraph.Visualizer
         {
             leafs.Clear();
 
-            List<VisualizedEmptyHierarchyBranch> ls = new List<VisualizedEmptyHierarchyBranch>();
             foreach (Transform c in transform)
             {
                 if (c.name == _visLeafsName)
@@ -95,8 +94,8 @@ namespace BehaviourGraph.Visualizer
                     for (int i = 0; i < c.childCount; i++)
                     {
                         var c2 = c.GetChild(i);
-                        if (c2.TryGetComponent<VisualizedEmptyHierarchyBranch>(out var outLeaf))
-                            ls.Add(outLeaf);
+                        if (c2.TryGetComponent<VisualizedLeaf>(out var outLeaf))
+                            leafs.Add(outLeaf);
                     }
                 }
                 else
@@ -108,18 +107,11 @@ namespace BehaviourGraph.Visualizer
                     for (int i = 0; i < cL.childCount; i++)
                     {
                         var c2 = cL.GetChild(i);
-                        if (c2.TryGetComponent<VisualizedEmptyHierarchyBranch>(out var outLeaf))
-                            ls.Add(outLeaf);
+                        if (c2.TryGetComponent<VisualizedLeaf>(out var outLeaf))
+                            leafs.Add(outLeaf);
                     }
                 }
             }
-
-            //foreach (var l in ls)
-            //    leafs.Add(l);
-
-            leafs.AddRange(ls);
-
-
         }
 
 
