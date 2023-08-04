@@ -100,7 +100,7 @@ namespace BehaviourGraph.Trees
 
         public UpdateStatus Status { get; private set; } = UpdateStatus.Failure;
 
-        public int CurrentLeafID { get; protected set; } = -1;
+        public ILeaf CurrentLeaf { get; protected set; }
 
         private bool _resetStateAtStart;
 
@@ -121,7 +121,7 @@ namespace BehaviourGraph.Trees
             }
 
             StartableLeaf = _leafs[0];
-            CurrentLeafID = 0;
+            CurrentLeaf = StartableLeaf;
 
             _resetStateAtStart = resetStateAtStart;
         }
@@ -144,8 +144,8 @@ namespace BehaviourGraph.Trees
             if (StartableLeaf == null)
                 return;
 
-            if (!_resetStateAtStart && CurrentLeafID >= 0)
-                ChangeRunningLeaf(_leafs[CurrentLeafID], null);
+            if (!_resetStateAtStart && CurrentLeaf != null)
+                ChangeRunningLeaf(CurrentLeaf, null);
             else
                 ChangeRunningLeaf(StartableLeaf, null);
         }
@@ -416,7 +416,7 @@ namespace BehaviourGraph.Trees
         {
             if (RunningLeaf != null)
                 return;
-
+            CurrentLeaf = leaf;
             RunningLeaf = leaf;
         }
 

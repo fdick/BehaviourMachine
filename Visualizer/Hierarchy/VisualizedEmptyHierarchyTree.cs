@@ -43,7 +43,7 @@ namespace BehaviourGraph.Visualizer
             }
 
 
-            var instance = new HierarchyBranch(graph, lfs, resetStateAtStart);
+            var instance = new HierarchyTree(graph, lfs, resetStateAtStart);
 
             //set custom name for myself
             if (FriendlyName != string.Empty)

@@ -107,7 +107,10 @@ namespace BehaviourGraph.Debug
                 var type = Type.GetType(arr[1]);
 
                 _inspectors.Add(type, Activator.CreateInstance(inh));
+                UnityEngine.Debug.Log($"inspector {type}");
+
             }
+            UnityEngine.Debug.Log($"Count inspectors {_inspectors.Count}");
         }
 
         //recursive
@@ -138,9 +141,10 @@ namespace BehaviourGraph.Debug
 
             var returnString = string.Empty;
 
+            UnityEngine.Debug.Log($"Need inspector {tree.GetType()}");
+
             //get inspector
-            if (!_inspectors.TryGetValue(tree.GetType(), out var inspector))
-                _inspectors.TryGetValue(tree.GetType().BaseType, out inspector);
+            var inspector = GetInspectorRecursive(tree.GetType());
 
             //get visualize
             var t = inspector.GetType();
@@ -152,6 +156,14 @@ namespace BehaviourGraph.Debug
                 returnString += GetDebugInfoTreeRecursive(childTree);
 
             return returnString;
+        }
+
+        private object GetInspectorRecursive(Type key)
+        {
+            UnityEngine.Debug.Log(key);
+            if (!_inspectors.TryGetValue(key, out var inspector))
+                inspector = GetInspectorRecursive(key.BaseType);
+            return inspector;
         }
 
         private void PauseEditor()

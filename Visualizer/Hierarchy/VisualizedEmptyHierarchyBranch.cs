@@ -8,7 +8,7 @@ namespace BehaviourGraph.Visualizer
     [Serializable]
     public class VisualizedEmptyHierarchyBranch : VisualizedLeaf, IVisualizedTree
     {
-        public bool resetStateAtStart;
+        public bool resetStateAtStart = true;
         public List<VisualizedLeaf> leafs = new List<VisualizedLeaf>();
         public List<VisualizedLink> links = new List<VisualizedLink>();
 

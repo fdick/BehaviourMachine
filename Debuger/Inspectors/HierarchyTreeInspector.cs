@@ -3,9 +3,9 @@ using System;
 
 namespace BehaviourGraph.Visualizer
 {
-    public class HierarchyTreeInspector : Inspector<HierarchyBranch>
+    public class HierarchyTreeInspector : Inspector<HierarchyTree>
     {
-        public override string Visualize(HierarchyBranch tree)
+        public override string Visualize(HierarchyTree tree)
         {
             if (tree == null || tree.GetRunningLeaf() == null)
                 return null;
