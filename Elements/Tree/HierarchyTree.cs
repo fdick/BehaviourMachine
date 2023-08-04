@@ -83,21 +83,6 @@ namespace BehaviourGraph.Trees
 
         public string FriendlyName { get; set; }
 
-        ///// <summary>
-        ///// Calls  when active leaf was changed but not started.
-        ///// </summary>
-        //public Action<ITree> OnChangedLastActiveLeaf { get; set; }
-
-        ///// <summary>
-        ///// Calls when my child is changing. From - To - from Status
-        ///// </summary>
-        //public Action<ILeaf, ILeaf, LeafStatus> OnChangeActiveLeaf { get; set; }
-
-        ///// <summary>
-        ///// Calls when any child is changing. Tree - From leaf - To leaf - from Status
-        ///// </summary>
-        //public Action<ITree, ILeaf, ILeaf, LeafStatus> OnChangeLastActiveLeaf { get; set; }
-
         /// <summary>
         /// Calls when running leaf is changing. ILeaf param is a new leaf.
         /// </summary>
@@ -235,14 +220,6 @@ namespace BehaviourGraph.Trees
 
             leaf.SetGameobject(_parentGraph.CustomGameobject);
             _leafs.Add(leaf);
-
-            //if (leaf is HierarchyBranch)
-            //{
-            //    var leafTree = leaf as HierarchyBranch;
-
-            //    leafTree.OnChangeLastActiveLeaf += (q, w, e, r) => OnChangeLastActiveLeaf?.Invoke(q, w, e, r);
-            //    leafTree.OnChangedLastActiveLeaf += (t) => OnChangedLastActiveLeaf?.Invoke(t);
-            //}
         }
 
         public void RemoveLeaf(ILeaf leaf)
@@ -428,7 +405,6 @@ namespace BehaviourGraph.Trees
 
         private void ChangeRunningLeaf(ILeaf newLeaf, ConditionData conditionData)
         {
-            //UnityEngine.Debug.Log($"Change {_parentGraph.transform.parent.name} - from: {RunningLeaf?.FriendlyName} - to: {newLeaf?.FriendlyName}");
             Breakpoint?.Invoke();
             OnChangeRunningLeaf?.Invoke(newLeaf);
 
