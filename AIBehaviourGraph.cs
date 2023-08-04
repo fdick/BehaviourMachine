@@ -147,7 +147,7 @@ namespace BehaviourGraph
             MainTree = (HierarchyTree)VisualizedTree.GetInstance(this);
 
             if (MainTree == null)
-                UnityEngine.Debug.LogError("Init visualized tree has errors!");
+                UnityEngine.Debug.LogError("Init visualized tree have errors!");
             MainTree.FriendlyName = "RootTree";
 
             GraphStatus = GraphStatuses.Inited;
