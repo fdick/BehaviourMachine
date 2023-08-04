@@ -24,7 +24,8 @@ namespace BehaviourGraph.Trees
 
 
     /// <summary>
-    /// This tree processes its leaves hierarchically. Only one process can run at a time. Need dispose after finishing.
+    /// This tree processes its leaves hierarchically. Only one process can run at a time. Contain global, local and end links.
+    /// Need dispose after finishing.
     /// </summary>
     public class HierarchyTree : ITree, IDisposable, IDebugBreakpoint
     {

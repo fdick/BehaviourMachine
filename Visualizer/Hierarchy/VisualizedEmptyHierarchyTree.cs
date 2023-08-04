@@ -134,12 +134,17 @@ namespace BehaviourGraph.Visualizer
                 }
                 lfs[i].OnAwake();
 
-                //set custom name
+                //set custom name for leafs
                 if (leafs[i].FriendlyName != string.Empty)
                     lfs[i].FriendlyName = leafs[i].FriendlyName;
             }
 
+
             var instance = new HierarchyBranch(graph, lfs);
+
+            //set custom name for myself
+            if (FriendlyName != string.Empty)
+                instance.FriendlyName = FriendlyName;
 
             //add links
             foreach (var li in links)
@@ -148,20 +153,25 @@ namespace BehaviourGraph.Visualizer
                 {
                     var from = instance.Leafs[leafs.IndexOf(li.froms[i])];
                     var to = instance.Leafs[leafs.IndexOf(li.to)];
+                    var condition = li.condition?.GetInstance(instance);
 
-                    if (li.linkType == Visualizer.LinkType.FromTo)
+                    //set custom name for condition
+                    if (condition != null && li.condition.FriendlyName != string.Empty)
+                        condition.FriendlyName = li.condition.FriendlyName;
+
+                    if (li.linkType == LinkType.FromTo)
                         instance.Link(
                             from,
                             to,
-                            li.condition.GetInstance(instance));
-                    else if (li.linkType == Visualizer.LinkType.Ended)
+                            condition);
+                    else if (li.linkType == LinkType.Ended)
                         instance.Link(
                             from,
                             to);
                     else
                         instance.Link(
                             to,
-                            li.condition.GetInstance(instance));
+                            condition);
                 }
             }
 

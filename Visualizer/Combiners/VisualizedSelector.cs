@@ -3,18 +3,17 @@ using BehaviourGraph.Trees;
 
 namespace BehaviourGraph.Visualizer
 {
-    public class VisualizedSequencer : VisualizedCondition
+    public class VisualizedSelector : VisualizedCondition
     {
         public VisualizedCondition[] conditions;
 
-        public override IConditional GetInstance(HierarchyBranch branch)
+        public override IConditional GetInstance(ITree tree)
         {
             IConditional[] iCons = new IConditional[conditions.Length];
             for (int i = 0; i < conditions.Length; i++)
-                iCons[i] = conditions[i].GetInstance(branch);
+                iCons[i] = conditions[i].GetInstance(tree);
 
-            return new Sequencer(iCons);
+            return new Selector(iCons);
         }
-
     }
 }

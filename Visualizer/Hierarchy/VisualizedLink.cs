@@ -16,11 +16,9 @@ namespace BehaviourGraph.Visualizer
         Multiple,
     }
 
-    public class VisualizedLink : MonoBehaviour
+    public class VisualizedLink : VisualizedObject
     {
         public LinkType linkType;
-        //public VisualizedHierarchyBranch[] froms;
-        //public VisualizedHierarchyBranch to;
 
         [FormerlySerializedAs("froms2")] public VisualizedLeaf[] froms;
         [FormerlySerializedAs("to2")] public VisualizedLeaf to;
@@ -54,6 +52,11 @@ namespace BehaviourGraph.Visualizer
             go.transform.SetParent(transform);
             go.transform.localPosition = Vector3.zero;
             condition = sequen;
+        }
+
+        private void OnValidate()
+        {
+            FriendlyName = "Don't using";
         }
     }
 }

@@ -6,20 +6,20 @@ namespace BehaviourGraph.Conditions
     /// <summary>
     /// Like <or> for all child conditions
     /// </summary>
-    public class Selector : CombinerCondiitons
+    public class Selector : CombinerConditions
     {
         public Selector(params IConditional[] conditions)
         {
             Conditions = conditions.ToList();
 
-            FriendlyName = "[ ";
+            FriendlyName = "( ";
             for (int i = 0; i < Conditions.Count; i++)
             {
                 if (i > 0)
                     FriendlyName += " || ";
                 FriendlyName += Conditions[i].FriendlyName;
                 if (i == Conditions.Count - 1)
-                    FriendlyName += " ]";
+                    FriendlyName += " )";
             }
         }
 

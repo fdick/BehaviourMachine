@@ -7,7 +7,7 @@ namespace BehaviourGraph.Visualizer
     [Serializable]
     public abstract class VisualizedObject : MonoBehaviour
     {
-        [field: SerializeField] public string FriendlyName { get; private set; }
+        [field: SerializeField] public string FriendlyName { get; protected set; }
 
     }
 
@@ -31,5 +31,10 @@ namespace BehaviourGraph.Visualizer
     public interface IVisualizedLeaf
     {
         public ILeaf GetInstance();
+    }
+
+    public interface IVisualizedCondition
+    {
+        public IConditional GetInstance(ITree tree);
     }
 }

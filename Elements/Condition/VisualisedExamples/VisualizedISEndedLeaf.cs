@@ -10,9 +10,9 @@ namespace BehaviourGraph.Conditions
     {
         public int leaf_ID = 0;
 
-        public override IConditional GetInstance(HierarchyBranch branch)
+        public override IConditional GetInstance(ITree tree)
         {
-            return new ISEndedLeaf(branch.Leafs[leaf_ID]);
+            return new ISEndedLeaf(tree.GetLeafs()[leaf_ID]);
         }
     }
 }

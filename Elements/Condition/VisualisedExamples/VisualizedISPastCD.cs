@@ -10,8 +10,8 @@ public class VisualizedISPastCD : VisualizedCondition
     public System.Single duration;
 
 
-    public override IConditional GetInstance(HierarchyBranch branch)
+    public override IConditional GetInstance(ITree tree)
     {
-        return new ISPastCD(branch.Leafs[leaf_ID], duration);
+        return new ISPastCD(tree.GetLeafs()[leaf_ID], duration);
     }
 }

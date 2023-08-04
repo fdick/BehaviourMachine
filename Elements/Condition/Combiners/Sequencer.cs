@@ -6,7 +6,7 @@ namespace BehaviourGraph.Conditions
     /// <summary>
     /// Like <and> for all child conditions
     /// </summary>
-    public class Sequencer : CombinerCondiitons
+    public class Sequencer : CombinerConditions
     {
         public Sequencer(params IConditional[] conditions)
         {

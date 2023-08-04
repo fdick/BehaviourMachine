@@ -16,6 +16,8 @@ namespace BehaviourGraph.Visualizer
         {
             //main leaf
             var mainLf = mainLeaf is IVisualizedTree mt ? (ILeaf)mt.GetInstance(graph) : mainLeaf.GetInstance();
+
+            //set custom name for main leaf
             if (mainLeaf.FriendlyName != string.Empty)
                 mainLf.FriendlyName = mainLeaf.FriendlyName;
 
@@ -36,12 +38,16 @@ namespace BehaviourGraph.Visualizer
                 }
                 lfs[i].OnAwake();
 
-                //set custom name
+                //set custom names for parallel leafs
                 if (_parallelLeafs[i].FriendlyName != string.Empty)
                     lfs[i].FriendlyName = _parallelLeafs[i].FriendlyName;
             }
 
             var instance = new ParallelBranch(graph, mainLf, lfs);
+
+            //set custom name for myself
+            if (FriendlyName != string.Empty)
+                instance.FriendlyName = FriendlyName;
 
             return instance;
         }

@@ -65,7 +65,7 @@ namespace BehaviourGraph.Visualizer
             {
                 var p = constructorParameters[i];
                 if (typeof(ILeaf).IsAssignableFrom(p.ParameterType))
-                    paramsForMethodWithoutType += $"branch.Leafs[{p.Name}_ID]";
+                    paramsForMethodWithoutType += $"tree.GetLeafs()[{p.Name}_ID]";
                 else 
                     paramsForMethodWithoutType += $"{constructorParameters[i].Name}";
 
@@ -84,7 +84,7 @@ namespace BehaviourGraph.Visualizer
 
             getInstanceMethod =
 $@"
-{TAB}public override IConditional GetInstance(HierarchyBranch branch)
+{TAB}public override IConditional GetInstance(ITree tree)
 {TAB}{{
 {TAB}{TAB}return new {selectedFileType}({paramsForMethodWithoutType});
 {TAB}}}";
