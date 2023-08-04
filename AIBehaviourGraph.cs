@@ -208,6 +208,7 @@ namespace BehaviourGraph
                 VisualizedEmptyHierarchyTree visTree = (VisualizedEmptyHierarchyTree)root.AddComponent(typeof(VisualizedEmptyHierarchyTree));
                 root.transform.SetParent(transform);
                 root.transform.localPosition = Vector3.zero;
+                visTree.FriendlyName = "RootTree";
 
                 VisualizedTree = visTree;
             }

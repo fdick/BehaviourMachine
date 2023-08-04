@@ -8,7 +8,7 @@ namespace BehaviourGraph.Visualizer
     [Serializable]
     public class VisualizedEmptyHierarchyBranch : VisualizedLeaf, IVisualizedTree
     {
-
+        public bool resetStateAtStart;
         public List<VisualizedLeaf> leafs = new List<VisualizedLeaf>();
         public List<VisualizedLink> links = new List<VisualizedLink>();
 
@@ -16,6 +16,78 @@ namespace BehaviourGraph.Visualizer
 
         private string _visLeafsName = "Leafs";
         private string _visLinkName = "Links";
+
+
+        public ITree GetInstance(AIBehaviourGraph graph)
+        {
+            //add leafs
+            var lfs = new ILeaf[leafs.Count];
+            for (int i = 0; i < leafs.Count; i++)
+            {
+                //if child leaf is tree
+                if (leafs[i] is IVisualizedTree lt)
+                {
+                    var childTree = lt.GetInstance(graph);
+
+                    lfs[i] = (ILeaf)childTree;
+                }
+                else
+                {
+                    lfs[i] = leafs[i].GetInstance();
+                }
+                lfs[i].OnAwake();
+
+                //set custom name
+                if (leafs[i].FriendlyName != string.Empty)
+                    lfs[i].FriendlyName = leafs[i].FriendlyName;
+            }
+
+            var instance = new HierarchyBranch(graph, lfs, resetStateAtStart);
+
+            //set custom name for myself
+            if (FriendlyName != string.Empty)
+                instance.FriendlyName = FriendlyName;
+
+            //add links
+            foreach (var li in links)
+            {
+                for (int i = 0; i < li.froms.Length; i++)
+                {
+                    var from = instance.Leafs[leafs.IndexOf(li.froms[i])];
+                    var to = instance.Leafs[leafs.IndexOf(li.to)];
+                    var condition = li.condition?.GetInstance(instance);
+
+                    //set custom name for condition
+                    if (condition != null && li.condition.FriendlyName != string.Empty)
+                        condition.FriendlyName = li.condition.FriendlyName;
+
+                    if (li.linkType == LinkType.FromTo)
+                        instance.Link(
+                            from,
+                            to,
+                            condition);
+                    else if (li.linkType == LinkType.Ended)
+                        instance.Link(
+                            from,
+                            to);
+                    else
+                        instance.Link(
+                            to,
+                            condition);
+                }
+            }
+
+            //set startable leaf
+            instance.StartableLeaf = instance.Leafs[startableLeaf_ID];
+
+            return instance;
+        }
+
+        public override ILeaf GetInstance()
+        {
+            UnityEngine.Debug.LogError("I am not a leaf!");
+            return null;
+        }
 
 
         [InspectorButton("Add Link")]
@@ -116,80 +188,7 @@ namespace BehaviourGraph.Visualizer
                     }
                 }
             }
-
             leafs.AddRange(ls);
-        }
-
-
-        public ITree GetInstance(AIBehaviourGraph graph)
-        {
-            //add leafs
-            var lfs = new ILeaf[leafs.Count];
-            for (int i = 0; i < leafs.Count; i++)
-            {
-                //if child leaf is tree
-                if(leafs[i] is IVisualizedTree lt)
-                {
-                    var childTree = lt.GetInstance(graph);
-                    
-                    lfs[i] = (ILeaf)childTree;
-                }
-                else
-                {
-                    lfs[i] = leafs[i].GetInstance();
-                }
-                lfs[i].OnAwake();
-
-                //set custom name
-                if (leafs[i].FriendlyName != string.Empty)
-                    lfs[i].FriendlyName = leafs[i].FriendlyName;
-            }
-
-            var instance = new HierarchyBranch(graph, lfs);
-
-            //set custom name for myself
-            if (FriendlyName != string.Empty)
-                instance.FriendlyName = FriendlyName;
-
-            //add links
-            foreach (var li in links)
-            {
-                for (int i = 0; i < li.froms.Length; i++)
-                {
-                    var from = instance.Leafs[leafs.IndexOf(li.froms[i])];
-                    var to = instance.Leafs[leafs.IndexOf(li.to)];
-                    var condition = li.condition?.GetInstance(instance);
-
-                    //set custom name for condition
-                    if (condition != null && li.condition.FriendlyName != string.Empty)
-                        condition.FriendlyName = li.condition.FriendlyName;
-
-                    if (li.linkType == LinkType.FromTo)
-                        instance.Link(
-                            from,
-                            to,
-                            condition);
-                    else if (li.linkType == LinkType.Ended)
-                        instance.Link(
-                            from,
-                            to);
-                    else
-                        instance.Link(
-                            to,
-                            condition);
-                }
-            }
-
-            //set startable leaf
-            instance.StartableLeaf = instance.Leafs[startableLeaf_ID];
-
-            return instance;
-        }
-
-        public override ILeaf GetInstance()
-        {
-            UnityEngine.Debug.LogError("I am not a leaf!");
-            return null;
         }
     }
 }

@@ -20,9 +20,4 @@ namespace BehaviourGraph.Trees
 
         public string FriendlyName { get; }
     }
-
-    public interface IBranch : ITree, ILeaf
-    {
-
-    }
 }

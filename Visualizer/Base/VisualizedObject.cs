@@ -7,7 +7,7 @@ namespace BehaviourGraph.Visualizer
     [Serializable]
     public abstract class VisualizedObject : MonoBehaviour
     {
-        [field: SerializeField] public string FriendlyName { get; protected set; }
+        [field: SerializeField] public string FriendlyName { get; set; }
 
     }
 

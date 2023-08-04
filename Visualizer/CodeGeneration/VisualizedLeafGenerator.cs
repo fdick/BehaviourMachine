@@ -1,6 +1,7 @@
 using BehaviourGraph.Trees;
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -18,13 +19,18 @@ namespace BehaviourGraph.Visualizer
             if (Selection.activeObject == null)
                 return;
             var selectedObj = Selection.activeObject;
-            var selectedFileType = Type.GetType($"{selectedObj.name}", true);
+
+            //find type in all assemblies
+            var selectedFileType = AppDomain.CurrentDomain.GetAssemblies()
+                .Reverse()
+                .Select(assembly => assembly.GetType(selectedObj.name))
+                .FirstOrDefault(t => t != null);
 
             if (!typeof(ITree).IsAssignableFrom(selectedFileType) &&
                 !typeof(ILeaf).IsAssignableFrom(selectedFileType) &&
                 !typeof(IConditional).IsAssignableFrom(selectedFileType))
             {
-                UnityEngine.Debug.Log("This script can not be origin for generator!");
+                UnityEngine.Debug.Log($"<{selectedFileType}> can not be origin for generator!");
                 return;
             }
 

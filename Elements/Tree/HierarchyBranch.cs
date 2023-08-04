@@ -4,15 +4,16 @@ using UnityEngine;
 namespace BehaviourGraph.Trees
 {
     /// <summary>
-    /// This branch processes its leaves hierarchically. Only one process can run at a time. Can be a leaf and a tree. Need dispose after finishing.
+    /// This branch processes its leaves hierarchically. Only one process can run at a time. Can be a leaf and a tree. Contain global, local and end links.
+    /// Need dispose after finishing.
     /// </summary>
     public class HierarchyBranch : HierarchyTree, ILeaf
     {
-        public HierarchyBranch(AIBehaviourGraph graph) : base(graph)
+        public HierarchyBranch(AIBehaviourGraph graph, bool resetStateAtStart = true) : base(graph, resetStateAtStart)
         {
         }
 
-        public HierarchyBranch(AIBehaviourGraph graph, ILeaf[] leafs) : base(graph, leafs)
+        public HierarchyBranch(AIBehaviourGraph graph, ILeaf[] leafs, bool resetStateAtStart = true) : base(graph, leafs, resetStateAtStart)
         {
         }
 

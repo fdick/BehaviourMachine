@@ -50,11 +50,6 @@ namespace BehaviourGraph.Trees
         /// </summary>
         public ILeaf RunningLeaf { get; protected set; }
 
-        /// <summary>
-        /// Ended active leaf.
-        /// </summary>
-        public ILeaf EndedRunningLeaf { get; protected set; }
-
 
         public Dictionary<ILeaf, ILeaf> EndLinks
         {
@@ -105,7 +100,16 @@ namespace BehaviourGraph.Trees
 
         public UpdateStatus Status { get; private set; } = UpdateStatus.Failure;
 
-        public HierarchyTree(AIBehaviourGraph graph, ILeaf[] leafs)
+        public int CurrentLeafID { get; protected set; } = -1;
+
+        private bool _resetStateAtStart;
+
+        /// <summary>
+        /// For creating empty instances
+        /// </summary>
+        /// <param name="graph"></param>
+        /// <param name="leafs"></param>
+        public HierarchyTree(AIBehaviourGraph graph, ILeaf[] leafs, bool resetStateAtStart = true)
         {
             _parentGraph = graph;
 
@@ -115,12 +119,23 @@ namespace BehaviourGraph.Trees
             {
                 AddLeaf(leafs[i]);
             }
+
+            StartableLeaf = _leafs[0];
+            CurrentLeafID = 0;
+
+            _resetStateAtStart = resetStateAtStart;
         }
 
-        public HierarchyTree(AIBehaviourGraph graph)
+        /// <summary>
+        /// For creating inherits
+        /// </summary>
+        /// <param name="graph"></param>
+        public HierarchyTree(AIBehaviourGraph graph, bool resetStateAtStart = true)
         {
             _parentGraph = graph;
             FriendlyName = ToString().Split('.').Last();
+
+            _resetStateAtStart = resetStateAtStart;
         }
 
 
@@ -129,7 +144,10 @@ namespace BehaviourGraph.Trees
             if (StartableLeaf == null)
                 return;
 
-            ChangeRunningLeaf(StartableLeaf, null);
+            if (!_resetStateAtStart && CurrentLeafID >= 0)
+                ChangeRunningLeaf(_leafs[CurrentLeafID], null);
+            else
+                ChangeRunningLeaf(StartableLeaf, null);
         }
 
         public UpdateStatus UpdateTree()
@@ -361,7 +379,6 @@ namespace BehaviourGraph.Trees
         }
 
         public ILeaf GetRunningLeaf() => RunningLeaf;
-        public ILeaf GetEndedRunningLeaf() => EndedRunningLeaf;
         public ILeaf GetStartableLeaf() => StartableLeaf;
 
         public virtual void Dispose()
@@ -401,7 +418,6 @@ namespace BehaviourGraph.Trees
                 return;
 
             RunningLeaf = leaf;
-            EndedRunningLeaf = leaf;
         }
 
         private void ChangeRunningLeaf(ILeaf newLeaf, ConditionData conditionData)
