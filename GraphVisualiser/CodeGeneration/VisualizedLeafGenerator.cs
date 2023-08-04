@@ -140,10 +140,17 @@ public class {scriptName} : VisualizedCondition
 
             getInstanceMethod =
 $@"
-{TAB}public override HierarchyBranch GetInstance(AIBehaviourGraph graph)
+{TAB}public ITree GetInstance(AIBehaviourGraph graph)
 {TAB}{{
 {TAB}{TAB}return new {selectedFileType}({paramsForMethodWithoutType});
-{TAB}}}";
+{TAB}}}
+
+{TAB}public override ILeaf GetInstance()
+{TAB}{{
+{TAB}{TAB}Debug.LogError($""{{this}} - is not a leaf!"");
+{TAB}{TAB}return null;
+{ TAB}}}
+";
 
             scriptName = "Visualized" + selectedFileType;
             script =
@@ -153,7 +160,7 @@ using BehaviourGraph.Visualizer;
 using BehaviourGraph;
 using BehaviourGraph.Trees;
 
-public class {scriptName} : VisualizedBranch
+public class {scriptName} : VisualizedLeaf, IVisualizedTree
 {{
 {bodyFields}
 {getInstanceMethod}
@@ -212,10 +219,6 @@ public class {scriptName} : VisualizedLeaf
 {{
 {bodyFields}
 {getInstanceMethod}
-{TAB}public override HierarchyBranch GetInstance(AIBehaviourGraph graph)
-{TAB}{{
-{TAB}    throw new System.NotImplementedException();
-{TAB}}}
 }}";
 
             return script;

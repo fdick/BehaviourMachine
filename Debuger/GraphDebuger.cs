@@ -156,10 +156,6 @@ namespace BehaviourGraph.Debug
 
         private void PauseEditor()
         {
-            //OnUpdate();
-            //_previousBranch.value = string.Empty;
-            //_previousBranch.value = GetDebugInfoTreeRecursive(_graph.MainTree);
-            UnityEngine.Debug.Log("Pause editor");
             UnityEngine.Debug.Break();
         }
 
