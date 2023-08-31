@@ -10,7 +10,8 @@ namespace BehaviourGraph.Trees
     /// </summary>
     public class ParallelBranch : ParallelTree, ILeaf, IDisposable
     {
-        public ParallelBranch(AIBehaviourGraph graph, ILeaf mainLeaf, params ILeaf[] parallelLeafs) : base(graph, mainLeaf, parallelLeafs)
+        public ParallelBranch(AIBehaviourGraph graph, ILeaf mainLeaf, params ILeaf[] parallelLeafs) : base(graph,
+            mainLeaf, parallelLeafs)
         {
         }
 
@@ -25,7 +26,7 @@ namespace BehaviourGraph.Trees
         /// </summary>
         public void OnAwake()
         {
-            
+            AwakeTree();
         }
 
         public void OnStart(ConditionData condData = null)
@@ -57,8 +58,13 @@ namespace BehaviourGraph.Trees
             OnEnded = null;
         }
 
-        protected virtual void OnStarted(ConditionData condData = null) { }
-        protected virtual void OnEnding() { }
+        protected virtual void OnStarted(ConditionData condData = null)
+        {
+        }
+
+        protected virtual void OnEnding()
+        {
+        }
 
         public bool CheckCD(float duration)
         {

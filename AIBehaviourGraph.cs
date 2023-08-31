@@ -94,13 +94,13 @@ namespace BehaviourGraph
 
         public void StopGraph()
         {
-            if (GraphStatus != GraphStatuses.Started || GraphStatus != GraphStatuses.Paused)
+            if (GraphStatus < GraphStatuses.Started)
                 return;
             if (GraphStatus == GraphStatuses.Paused)
                 UnPauseGraph();
 
-            MainTree.EndTree();
             StopUpdator();
+            MainTree.EndTree();
             GraphStatus = GraphStatuses.Ended;
         }
 
@@ -149,6 +149,11 @@ namespace BehaviourGraph
             if (MainTree == null)
                 UnityEngine.Debug.LogError("Init visualized tree have errors!");
             MainTree.FriendlyName = "RootTree";
+
+            for (int i = 0; i < MainTree.Leafs.Count; i++)
+            {
+                MainTree.Leafs[i].OnAwake();
+            }
 
             GraphStatus = GraphStatuses.Inited;
         }

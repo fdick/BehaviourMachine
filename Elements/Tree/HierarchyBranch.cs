@@ -13,7 +13,8 @@ namespace BehaviourGraph.Trees
         {
         }
 
-        public HierarchyBranch(AIBehaviourGraph graph, ILeaf[] leafs, bool resetStateAtStart = true) : base(graph, leafs, resetStateAtStart)
+        public HierarchyBranch(AIBehaviourGraph graph, ILeaf[] leafs, bool resetStateAtStart = true) : base(graph,
+            leafs, resetStateAtStart)
         {
         }
 
@@ -28,7 +29,7 @@ namespace BehaviourGraph.Trees
         /// </summary>
         public void OnAwake()
         {
-
+            AwakeTree();
         }
 
         public void OnStart(ConditionData condData = null)
@@ -61,13 +62,17 @@ namespace BehaviourGraph.Trees
             OnEnded = null;
         }
 
-        protected virtual void OnStarted(ConditionData activatedLink = null) { }
-        protected virtual void OnEnding() { }
+        protected virtual void OnStarted(ConditionData activatedLink = null)
+        {
+        }
+
+        protected virtual void OnEnding()
+        {
+        }
 
         public bool CheckCD(float duration)
         {
             return Time.time >= _lastProcCD + duration || _lastProcCD == 0;
         }
     }
-
 }

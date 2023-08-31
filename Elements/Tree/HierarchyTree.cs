@@ -138,6 +138,13 @@ namespace BehaviourGraph.Trees
             _resetStateAtStart = resetStateAtStart;
         }
 
+        public void AwakeTree()
+        {
+            for (int i = 0; i < _leafs.Count; i++)
+            {
+                _leafs[i].OnAwake();
+            }
+        }
 
         public void StartTree()
         {

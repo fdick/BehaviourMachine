@@ -35,6 +35,15 @@ namespace BehaviourGraph.Trees
         private List<ILeaf> _parallelLeafs;
         private AIBehaviourGraph _graph;
 
+        public void AwakeTree()
+        {
+            _mainLeaf.OnAwake();
+            for (int i = 0; i < _parallelLeafs.Count; i++)
+            {
+                _parallelLeafs[i].OnAwake();
+            }
+        }
+
         public void StartTree()
         {
             foreach (var l in _parallelLeafs)

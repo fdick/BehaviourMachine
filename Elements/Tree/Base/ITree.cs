@@ -1,7 +1,8 @@
 namespace BehaviourGraph.Trees
 {
-    public interface ITree 
-    { 
+    public interface ITree
+    {
+        public void AwakeTree();
         public void StartTree();
         public UpdateStatus UpdateTree();
         public void EndTree();
