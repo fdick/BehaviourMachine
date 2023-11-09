@@ -3,8 +3,7 @@
 Позволяет обрабатывать состояния иерархично и/или параллельно. При желании можно легко написать собственный обработчик.
 Общая схема графа:
 
-![image](https://github.com/fdick/BehaviourMachine/assets/62177084/e8f9e39c-25d2-44e3-bee9-08b7c37f66e4)
-
+![image](https://github.com/fdick/BehaviourMachine/assets/62177084/dd4859ce-2546-49c9-bed6-55f3cef8da91)
 
 ## Производительность
 
