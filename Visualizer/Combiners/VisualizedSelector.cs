@@ -7,9 +7,9 @@ namespace BehaviourGraph.Visualizer
     {
         public VisualizedCondition[] conditions;
 
-        public override IConditional GetInstance(ITree tree)
+        public override ICondition GetInstance(ITree tree)
         {
-            IConditional[] iCons = new IConditional[conditions.Length];
+            ICondition[] iCons = new ICondition[conditions.Length];
             for (int i = 0; i < conditions.Length; i++)
                 iCons[i] = conditions[i].GetInstance(tree);
 

@@ -18,7 +18,7 @@ namespace BehaviourGraph.Visualizer
         private string _visLeafsName = "Leafs";
         private string _visLinkName = "Links";
 
-        public override ITree GetInstance(AIBehaviourGraph graph)
+        public override ITree GetInstance(BehaviourMachine graph)
         {
             //add leafs
             var lfs = new ILeaf[leafs.Count];
@@ -35,7 +35,7 @@ namespace BehaviourGraph.Visualizer
                 {
                     lfs[i] = leafs[i].GetInstance();
                 }
-                lfs[i].OnAwake();
+                // lfs[i].OnAwake();
 
                 //set custom name for leafs
                 if (leafs[i].FriendlyName != string.Empty)

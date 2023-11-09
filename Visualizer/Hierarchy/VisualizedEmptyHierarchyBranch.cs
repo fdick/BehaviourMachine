@@ -8,24 +8,24 @@ namespace BehaviourGraph.Visualizer
     [Serializable]
     public class VisualizedEmptyHierarchyBranch : VisualizedLeaf, IVisualizedTree
     {
-        public bool resetStateAtStart = true;
-        public List<VisualizedLeaf> leafs = new List<VisualizedLeaf>();
-        public List<VisualizedLink> links = new List<VisualizedLink>();
+        [SerializeField] private bool _resetStateAtStart = true;
+        [SerializeField] private List<VisualizedLeaf> _leafs = new List<VisualizedLeaf>();
+        [SerializeField] private List<VisualizedLink> _links = new List<VisualizedLink>();
 
-        public int startableLeaf_ID = 0;
+        [SerializeField] private int _startableLeafID = 0;
 
-        private string _visLeafsName = "Leafs";
-        private string _visLinkName = "Links";
+        private const string VIS_LEAFS_NAME = "Leafs";
+        private const string VIS_LINKS_NAME = "Links";
 
 
-        public ITree GetInstance(AIBehaviourGraph graph)
+        public ITree GetInstance(BehaviourMachine graph)
         {
             //add leafs
-            var lfs = new ILeaf[leafs.Count];
-            for (int i = 0; i < leafs.Count; i++)
+            var lfs = new ILeaf[_leafs.Count];
+            for (int i = 0; i < _leafs.Count; i++)
             {
                 //if child leaf is tree
-                if (leafs[i] is IVisualizedTree lt)
+                if (_leafs[i] is IVisualizedTree lt)
                 {
                     var childTree = lt.GetInstance(graph);
 
@@ -33,28 +33,28 @@ namespace BehaviourGraph.Visualizer
                 }
                 else
                 {
-                    lfs[i] = leafs[i].GetInstance();
+                    lfs[i] = _leafs[i].GetInstance();
                 }
-                lfs[i].OnAwake();
+                // lfs[i].OnAwake();
 
                 //set custom name
-                if (leafs[i].FriendlyName != string.Empty)
-                    lfs[i].FriendlyName = leafs[i].FriendlyName;
+                if (_leafs[i].FriendlyName != string.Empty)
+                    lfs[i].FriendlyName = _leafs[i].FriendlyName;
             }
 
-            var instance = new HierarchyBranch(graph, lfs, resetStateAtStart);
+            var instance = new HierarchyBranch(graph, lfs, _resetStateAtStart);
 
             //set custom name for myself
             if (FriendlyName != string.Empty)
                 instance.FriendlyName = FriendlyName;
 
             //add links
-            foreach (var li in links)
+            foreach (var li in _links)
             {
                 for (int i = 0; i < li.froms.Length; i++)
                 {
-                    var from = instance.Leafs[leafs.IndexOf(li.froms[i])];
-                    var to = instance.Leafs[leafs.IndexOf(li.to)];
+                    var from = instance.Leafs[_leafs.IndexOf(li.froms[i])];
+                    var to = instance.Leafs[_leafs.IndexOf(li.to)];
                     var condition = li.condition?.GetInstance(instance);
 
                     //set custom name for condition
@@ -78,7 +78,7 @@ namespace BehaviourGraph.Visualizer
             }
 
             //set startable leaf
-            instance.StartableLeaf = instance.Leafs[startableLeaf_ID];
+            instance.StartableLeaf = instance.Leafs[_startableLeafID];
 
             return instance;
         }
@@ -93,29 +93,28 @@ namespace BehaviourGraph.Visualizer
         [InspectorButton("Add Link")]
         public void AddVisualizedLink()
         {
-            var parent = transform.Find(_visLinkName)?.gameObject;
+            var parent = transform.Find(VIS_LINKS_NAME)?.gameObject;
             if (parent == null)
             {
-                parent = new GameObject(_visLinkName);
+                parent = new GameObject(VIS_LINKS_NAME);
                 parent.transform.SetParent(transform);
                 parent.transform.localPosition = Vector3.zero;
-
             }
 
             var go = new GameObject("Link1");
             VisualizedLink vLink = (VisualizedLink)go.AddComponent(typeof(VisualizedLink));
             go.transform.SetParent(parent.transform);
             go.transform.localPosition = Vector3.zero;
-            links.Add(vLink);
+            _links.Add(vLink);
         }
 
         [InspectorButton("Add Leaf")]
         public void AddVisualizedLeaf()
         {
-            var parent = transform.Find(_visLeafsName)?.gameObject;
+            var parent = transform.Find(VIS_LEAFS_NAME)?.gameObject;
             if (parent == null)
             {
-                parent = new GameObject(_visLeafsName);
+                parent = new GameObject(VIS_LEAFS_NAME);
                 parent.transform.SetParent(transform);
                 parent.transform.localPosition = Vector3.zero;
             }
@@ -128,44 +127,45 @@ namespace BehaviourGraph.Visualizer
         [InspectorButton("Add Branch")]
         public void AddVisualizedBranch()
         {
-            var parent = transform.Find(_visLeafsName)?.gameObject;
+            var parent = transform.Find(VIS_LEAFS_NAME)?.gameObject;
             if (parent == null)
             {
-                parent = new GameObject(_visLeafsName);
+                parent = new GameObject(VIS_LEAFS_NAME);
                 parent.transform.SetParent(transform);
                 parent.transform.localPosition = Vector3.zero;
             }
 
             var go = new GameObject("Branch1");
-            VisualizedEmptyHierarchyBranch branchComp = (VisualizedEmptyHierarchyBranch)go.AddComponent(typeof(VisualizedEmptyHierarchyBranch));
+            VisualizedEmptyHierarchyBranch branchComp =
+                (VisualizedEmptyHierarchyBranch)go.AddComponent(typeof(VisualizedEmptyHierarchyBranch));
             go.transform.SetParent(parent.transform);
             go.transform.localPosition = Vector3.zero;
 
-            leafs.Add(branchComp);
+            _leafs.Add(branchComp);
         }
 
         [InspectorButton("Get Child Links")]
         public void GetVisualizedLinks()
         {
-            links.Clear();
+            _links.Clear();
 
             var ls = transform.GetComponentsInChildren<VisualizedLink>();
 
             foreach (var l in ls)
             {
-                links.Add(l);
+                _links.Add(l);
             }
         }
 
         [InspectorButton("Get Child Leafs")]
         public void GetVisualizedLeafs()
         {
-            leafs.Clear();
+            _leafs.Clear();
 
             List<VisualizedLeaf> ls = new List<VisualizedLeaf>();
             foreach (Transform c in transform)
             {
-                if (c.name == _visLeafsName)
+                if (c.name == VIS_LEAFS_NAME)
                 {
                     for (int i = 0; i < c.childCount; i++)
                     {
@@ -176,7 +176,7 @@ namespace BehaviourGraph.Visualizer
                 }
                 else
                 {
-                    var cL = c.Find(_visLeafsName);
+                    var cL = c.Find(VIS_LEAFS_NAME);
                     if (cL == null)
                         continue;
 
@@ -188,7 +188,8 @@ namespace BehaviourGraph.Visualizer
                     }
                 }
             }
-            leafs.AddRange(ls);
+
+            _leafs.AddRange(ls);
         }
     }
 }

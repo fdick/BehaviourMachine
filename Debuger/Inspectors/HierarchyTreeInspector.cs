@@ -1,5 +1,6 @@
 ﻿using BehaviourGraph.Trees;
 using System;
+using BehaviourGraph.Leafs;
 
 namespace BehaviourGraph.Visualizer
 {
@@ -37,12 +38,12 @@ namespace BehaviourGraph.Visualizer
                     foreach (var c in l.Value.toLeafConditions)
                     {
                         i++;
-                        text = "     " + i + ". " + c.condition.FriendlyName;
+                        text = "     " + i + ". " + c.ExecutedCondition.FriendlyName;
 
                         UpdateStatus status;
                         try
                         {
-                            status = c.condition.OnUpdate();
+                            status = c.ExecutedCondition.ConditionUpdate();
                         }
                         catch (Exception)
                         {
@@ -75,11 +76,11 @@ namespace BehaviourGraph.Visualizer
                         foreach (var c in l.Value)
                         {
                             i++;
-                            text = "     " + i + ". " + c.condition.FriendlyName;
+                            text = "     " + i + ". " + c.ExecutedCondition.FriendlyName;
                             UpdateStatus status;
                             try
                             {
-                                status = c.condition.OnUpdate();
+                                status = c.ExecutedCondition.ConditionUpdate();
                             }
                             catch (Exception)
                             {
@@ -100,10 +101,11 @@ namespace BehaviourGraph.Visualizer
             //ended link
             if (tree.EndLinks.TryGetValue(tree.GetRunningLeaf(), out var leaf))
             {
+                var endableLeaf = tree.GetRunningLeaf() as IEndableLeaf;   
                 text = "     " + "To " + leaf.FriendlyName;
                 returnString += InsertStatus(
                     text,
-                    tree.GetRunningLeaf().OnUpdate() == UpdateStatus.Running ? UpdateStatus.Failure : UpdateStatus.Successed,
+                    endableLeaf.EndCondition() == UpdateStatus.Running ? UpdateStatus.Failure : UpdateStatus.Successed,
                     30);
             }
 

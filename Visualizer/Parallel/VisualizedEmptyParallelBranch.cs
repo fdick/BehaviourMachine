@@ -12,7 +12,7 @@ namespace BehaviourGraph.Visualizer
         public List<VisualizedLeaf> _parallelLeafs = new List<VisualizedLeaf>();
 
 
-        public ITree GetInstance(AIBehaviourGraph graph)
+        public ITree GetInstance(BehaviourMachine graph)
         {
             //main leaf
             var mainLf = mainLeaf is IVisualizedTree mt ? (ILeaf)mt.GetInstance(graph) : mainLeaf.GetInstance();
@@ -36,7 +36,7 @@ namespace BehaviourGraph.Visualizer
                 {
                     lfs[i] = _parallelLeafs[i].GetInstance();
                 }
-                lfs[i].OnAwake();
+                // lfs[i].OnAwake();
 
                 //set custom names for parallel leafs
                 if (_parallelLeafs[i].FriendlyName != string.Empty)

@@ -17,7 +17,7 @@ namespace BehaviourGraph.Debug
     [Serializable]
     public class GraphDebuger
     {
-        public GraphDebuger(AIBehaviourGraph graph, bool enabledDebugMode = false)
+        public GraphDebuger(BehaviourMachine graph, bool enabledDebugMode = false)
         {
             if (graph == null)
                 UnityEngine.Debug.LogError("Graph is null!");
@@ -53,7 +53,7 @@ namespace BehaviourGraph.Debug
 
         private Dictionary<Type, object> _inspectors;
 
-        private AIBehaviourGraph _graph;
+        private BehaviourMachine _graph;
         private bool _enabledDebugMode;
         private Coroutine _updatorCoro;
 
@@ -222,15 +222,15 @@ namespace BehaviourGraph.Debug
             }
         }
 
-        private List<IDebugBreakpoint> GetBreakpoints(ITree tree)
+        private List<IDebugable> GetBreakpoints(ITree tree)
         {
             var leafs = tree.GetLeafs();
             if (leafs.Length == 0)
                 return null;
 
-            var brps = new List<IDebugBreakpoint>();
+            var brps = new List<IDebugable>();
             //check myself
-            if (tree is IDebugBreakpoint treeB)
+            if (tree is IDebugable treeB)
                 brps.Add(treeB);
 
             for (int i = 0; i < leafs.Length; i++)

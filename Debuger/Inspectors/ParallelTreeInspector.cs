@@ -1,4 +1,5 @@
-﻿using BehaviourGraph.Trees;
+﻿using BehaviourGraph.Leafs;
+using BehaviourGraph.Trees;
 
 namespace BehaviourGraph.Visualizer
 {
@@ -10,7 +11,6 @@ namespace BehaviourGraph.Visualizer
                 return null;
 
             var returnString = string.Empty;
-
 
 
             returnString += tree.FriendlyName;
@@ -25,8 +25,10 @@ namespace BehaviourGraph.Visualizer
             int it = 1;
             foreach (var l in tree.GetParallelLeafs())
             {
+                var endableLeaf = l as IEndableLeaf;
                 text = $"\n     {it}. " + l.FriendlyName;
-                returnString += InsertStatus(text, l.OnUpdate(), 55);
+                returnString += InsertStatus(text,
+                    endableLeaf != null ? endableLeaf.EndCondition() : UpdateStatus.Running, 55);
                 it++;
             }
 
@@ -50,7 +52,5 @@ namespace BehaviourGraph.Visualizer
 
             return modifyableText;
         }
-
     }
-
 }

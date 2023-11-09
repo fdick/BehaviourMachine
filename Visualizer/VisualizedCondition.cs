@@ -1,4 +1,5 @@
-﻿using BehaviourGraph.Trees;
+﻿using BehaviourGraph.Conditions;
+using BehaviourGraph.Trees;
 
 namespace BehaviourGraph.Visualizer
 {
@@ -9,6 +10,6 @@ namespace BehaviourGraph.Visualizer
         /// </summary>
         /// <param name="tree">Tree which contains this condition</param>
         /// <returns></returns>
-        public abstract IConditional GetInstance(ITree tree);
+        public abstract ICondition GetInstance(ITree tree);
     }
 }

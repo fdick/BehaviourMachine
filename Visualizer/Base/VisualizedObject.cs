@@ -1,5 +1,6 @@
 ﻿using BehaviourGraph.Trees;
 using System;
+using BehaviourGraph.Conditions;
 using UnityEngine;
 
 namespace BehaviourGraph.Visualizer
@@ -14,7 +15,7 @@ namespace BehaviourGraph.Visualizer
     [Serializable]
     public abstract class VisualizedTree : VisualizedObject, IVisualizedTree
     {
-        public abstract ITree GetInstance(AIBehaviourGraph graph);
+        public abstract ITree GetInstance(BehaviourMachine graph);
     }
 
     [Serializable]
@@ -25,7 +26,7 @@ namespace BehaviourGraph.Visualizer
 
     public interface IVisualizedTree
     {
-        public ITree GetInstance(AIBehaviourGraph graph);
+        public ITree GetInstance(BehaviourMachine graph);
     }
 
     public interface IVisualizedLeaf
@@ -35,6 +36,6 @@ namespace BehaviourGraph.Visualizer
 
     public interface IVisualizedCondition
     {
-        public IConditional GetInstance(ITree tree);
+        public ICondition GetInstance(ITree tree);
     }
 }
