@@ -20,7 +20,7 @@ namespace BehaviourGraph.Trees
             foreach (var p in parallelLeafs)
             {
                 if (p is IEndableLeaf ep)
-                    UnityEngine.Debug.LogError(
+                    UnityEngine.Debug.LogWarning(
                         $"{FriendlyName} is parallel Tree! And it is not support Endable Leaf - {p.FriendlyName}! ");
             }
 
@@ -181,5 +181,71 @@ namespace BehaviourGraph.Trees
         }
 
         public BehaviourMachine GetGraph() => _graph;
+
+        /// <summary>
+        /// Find a first parallel child leaf by type.
+        /// </summary>
+        /// <typeparam name="T"> is finding type</typeparam>
+        /// <returns></returns>
+        public T QLeaf<T>() where T : class, ILeaf
+        {
+            foreach (var l in _parallelLeafs)
+            {
+                if (l is T tLeaf)
+                    return tLeaf;
+                if (l is ITree t)
+                {
+                    var r = t.QLeaf<T>();
+                    if (r != null)
+                        return r;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Find a first parallel child leaf by friendly name.
+        /// </summary>
+        /// <param name="friendlyName">Friendly name of a leaf.</param>
+        public ILeaf QLeaf(string friendlyName)
+        {
+            foreach (var l in _parallelLeafs)
+            {
+                if (string.Equals(l.FriendlyName, friendlyName))
+                    return l;
+                if (l is ITree t)
+                {
+                    var r = t.QLeaf(friendlyName);
+                    if (r != null)
+                        return r;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Find a first parallel child leaf by type and tag.
+        /// </summary>
+        /// <param name="tag"> Tag name</param>
+        /// <typeparam name="T">Type of finding</typeparam>
+        /// <returns></returns>
+        public T QLeaf<T>(string tag) where T : class, ILeaf
+        {
+            foreach (var l in _parallelLeafs)
+            {
+                if (l is T tLeaf && string.Equals(l.Tag, tag))
+                    return tLeaf;
+                if (l is ITree t)
+                {
+                    var r = t.QLeaf<T>(tag);
+                    if (r != null)
+                        return r;
+                }
+            }
+
+            return null;
+        }
     }
 }

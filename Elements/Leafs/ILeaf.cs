@@ -13,6 +13,7 @@ namespace BehaviourGraph
 
     public interface ILeaf : IForestObject
     {
+        public string Tag { get; set; }
         public Action<Transition> OnEnter { get; set; }
         public Action OnExit { get; set; }
         public void InitLeaf();

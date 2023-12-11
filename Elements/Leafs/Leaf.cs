@@ -8,33 +8,34 @@ namespace BehaviourGraph
     public class Leaf : ILeaf, IDisposable
     {
         public string FriendlyName { get; set; }
+        public string Tag { get; set; }
         public GUID ID { get; }
         protected GameObject _gameObject;
         protected bool _isRunning;
         protected float _lastProcCD;
 
-        public Leaf()
+        public Leaf(string tag = null)
         {
             ID = GUID.Generate();
             FriendlyName = this.ToString();
+            Tag = tag;
         }
 
-        public Leaf(Action onEnter, Action onExit)
+        public Leaf(Action onEnter, Action onExit, string tag = null)
         {
             ID = GUID.Generate();
             FriendlyName = this.ToString();
             OnEnter += (c) => onEnter?.Invoke();
             OnExit += () => onExit?.Invoke();
+            Tag = tag;
         }
 
         public Action<Transition> OnEnter { get; set; }
         public Action OnExit { get; set; }
 
 
-
         public virtual void InitLeaf()
         {
-
         }
 
         public virtual void EnterLeaf(Transition condData)
@@ -64,6 +65,11 @@ namespace BehaviourGraph
         public bool CheckCD(float duration)
         {
             return !_isRunning && (Time.time >= _lastProcCD + duration || _lastProcCD == 0);
+        }
+
+        public override string ToString()
+        {
+            return string.IsNullOrEmpty(FriendlyName)? this.GetType().ToString() : FriendlyName;
         }
     }
 }

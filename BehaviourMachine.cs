@@ -6,13 +6,13 @@ namespace BehaviourGraph
 {
     public class BehaviourMachine : MonoBehaviour
     {
-        [field: Space] [field: SerializeField] public GameObject CustomGameobject { get; private set; }
-        [field: SerializeField] public VisualizedEmptyHierarchyTree VisualizedTree { get; private set; }
+        [Space] [SerializeField] private bool _initOnAwake = false;
+        [field: SerializeField] public GameObject CustomGameobject { get; private set; }
+        [field: SerializeField] public VisualizedEmptyHierarchyTree VisualizedTree { get; set; }
         [field: SerializeField] public GraphStatuses GraphStatus { get; private set; }
 
         public HierarchyTree MainTree { get; private set; }
-        private Coroutine _updatorCoro;
-        private readonly string _visRootTreeName = "VisualizedRootTree";
+        private const string VIS_ROOT_TREE_NAME = "VisualizedRootTree";
         private const string ROOT_TREE = "RootTree";
 
 #if UNITY_EDITOR
@@ -22,28 +22,40 @@ namespace BehaviourGraph
 
         private void Awake()
         {
-            if (!enabled)
+            if (!_initOnAwake)
+            {
+                enabled = false;
                 return;
-            InitGraph(CustomGameobject == null ? gameObject : CustomGameobject);
+            }
+
+            InitGraph(CustomGameobject);
         }
 
         private void Start()
         {
+            if (!_initOnAwake)
+                return;
             StartGraph();
         }
 
         private void Update()
         {
+            if (!_initOnAwake)
+                return;
             UpdateGraph();
         }
 
         private void FixedUpdate()
         {
+            if (!_initOnAwake)
+                return;
             FixedUpdateGraph();
         }
 
         private void LateUpdate()
         {
+            if (!_initOnAwake)
+                return;
             LateUpdateGraph();
         }
 
@@ -130,6 +142,11 @@ namespace BehaviourGraph
 
             if (customGameobject != null)
                 CustomGameobject = customGameobject;
+            else
+            {
+                if (CustomGameobject == null)
+                    CustomGameobject = gameObject;
+            }
 
             MainTree = (HierarchyTree)VisualizedTree.GetInstance(this);
 
@@ -169,12 +186,12 @@ namespace BehaviourGraph
             MainTree.LateUpdateTree();
         }
 
-       [InspectorButton("Init Visualized Root Tree")]
+        [InspectorButton("Init Visualized Root Tree")]
         public void PrepareHierarchy()
         {
-            if (!transform.Find(_visRootTreeName))
+            if (!transform.Find(VIS_ROOT_TREE_NAME))
             {
-                var root = new GameObject(_visRootTreeName);
+                var root = new GameObject(VIS_ROOT_TREE_NAME);
                 VisualizedEmptyHierarchyTree visTree =
                     (VisualizedEmptyHierarchyTree)root.AddComponent(typeof(VisualizedEmptyHierarchyTree));
                 root.transform.SetParent(transform);

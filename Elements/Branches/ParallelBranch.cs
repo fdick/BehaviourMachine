@@ -6,7 +6,7 @@ namespace BehaviourGraph.Trees
 {
     /// <summary>
     /// This branch processes its leaves in parallel. Two or more processes can be running at the same time.
-    /// The branch contains one main process and may contain two or more processes that will run simultaneously
+    /// The branch contains one main process and may contains two or more processes that will run simultaneously
     /// and in parallel with the main process. The tree will end when the main process ends. Can be a leaf and a tree. Need dispose after finishing.
     /// </summary>
     public class ParallelBranch : ParallelTree, ILeaf, IUpdatableLeaf, IFixedUpdatableLeaf, ILateUpdatableLeaf,
@@ -16,7 +16,7 @@ namespace BehaviourGraph.Trees
             mainLeaf, parallelLeafs)
         {
         }
-
+        public string Tag { get; set; }
         public Action<Transition> OnEnter { get; set; }
         public Action OnExit { get; set; }
         protected GameObject _gameObject;

@@ -3,7 +3,7 @@ using BehaviourGraph.Trees;
 
 namespace BehaviourGraph.Visualizer
 {
-    public abstract class VisualizedCondition : VisualizedObject, IVisualizedCondition
+    public abstract class VisualizedCondition : VisualizedForestObject, IVisualizedCondition
     {
         /// <summary>
         /// Get instance from visualized condition

@@ -27,7 +27,7 @@ namespace BehaviourGraph.Trees
     }
 
     /// <summary>
-    /// This tree processes its leaves hierarchically. Only one process can run at a time. Contain global, local and end links.
+    /// This tree processes its leaves hierarchically. Only one process can run at a time. Contains global, local and end links.
     /// Need dispose after finishing.
     /// </summary>
     public class HierarchyTree : ITree, IDisposable, IDebugable
@@ -98,7 +98,6 @@ namespace BehaviourGraph.Trees
 
             ID = GUID.Generate();
             FriendlyName = nameof(HierarchyTree);
-            // FriendlyName = ToString().Split('.').Last();
 
             for (int i = 0; i < leafs.Length; i++)
             {
@@ -122,7 +121,6 @@ namespace BehaviourGraph.Trees
         {
             _parentGraph = graph;
             FriendlyName = ToString().Split('.').Last();
-
             _resetStateAtStart = resetStateAtStart;
         }
 
@@ -137,7 +135,7 @@ namespace BehaviourGraph.Trees
         public void StartTree()
         {
             if (StartableLeaf == null)
-                return;
+                throw new NullReferenceException($"{FriendlyName}: Startable leaf is null!");
 
             if (!_resetStateAtStart && CurrentLeaf != null)
                 ChangeRunningLeaf(CurrentLeaf, null);
@@ -202,7 +200,7 @@ namespace BehaviourGraph.Trees
                         {
                             c.FromLeaf = RunningLeaf;
                             OnExecuteLink?.Invoke(c);
-                            
+
                             ChangeRunningLeaf(d.Key, c);
                             return treeStatus;
                         }
@@ -465,6 +463,98 @@ namespace BehaviourGraph.Trees
         public ILeaf[] GetLeafs() => Leafs.ToArray();
 
         public BehaviourMachine GetGraph() => _parentGraph;
+
+        /// <summary>
+        /// Force enter to Leaf. Find first leaf by T type. Only for this tree childs. 
+        /// </summary>
+        public void ForceEnter<T>() where T : ILeaf
+        {
+            var leaf = _leafs.FirstOrDefault(x => x.GetType() == typeof(T));
+
+            if (leaf == null)
+                return;
+
+            var id = _leafs.IndexOf(leaf);
+            ForceEnter(id);
+        }
+
+        /// <summary>
+        /// Force enter to Leaf. Only for this tree childs. 
+        /// </summary>
+        public void ForceEnter(int leafID)
+        {
+            if (leafID >= _leafs.Count)
+                return;
+
+            ChangeRunningLeaf(_leafs[leafID], new Transition(null, RunningLeaf, _leafs[leafID]));
+        }
+
+        /// <summary>
+        /// Find a first child leaf by type.
+        /// </summary>
+        /// <typeparam name="T"> is finding type</typeparam>
+        /// <returns></returns>
+        public T QLeaf<T>() where T : class, ILeaf
+        {
+            foreach (var l in _leafs)
+            {
+                if (l is T tLeaf)
+                    return tLeaf;
+                if (l is ITree t)
+                {
+                    var r = t.QLeaf<T>();
+                    if (r != null)
+                        return r;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Find a first child leaf by friendly name.
+        /// </summary>
+        /// <param name="friendlyName">Friendly name of a leaf.</param>
+        public ILeaf QLeaf(string friendlyName)
+        {
+            foreach (var l in _leafs)
+            {
+                if (string.Equals(l.FriendlyName, friendlyName))
+                    return l;
+                if (l is ITree t)
+                {
+                    var r = t.QLeaf(friendlyName);
+                    if (r != null)
+                        return r;
+                }
+            }
+
+            return null;
+        }
+        
+        /// <summary>
+        /// Find a first child leaf by type and tag.
+        /// </summary>
+        /// <param name="tag"> Tag name</param>
+        /// <typeparam name="T">Type of finding</typeparam>
+        /// <returns></returns>
+        public T QLeaf<T>(string tag) where T : class, ILeaf
+        {
+            foreach (var l in _leafs)
+            {
+                if (l is T tLeaf && string.Equals(l.Tag, tag))
+                    return tLeaf;
+                    
+                if (l is ITree t)
+                {
+                    var r = t.QLeaf<T>(tag);
+                    if (r != null)
+                        return r;
+                }
+            }
+
+            return null;
+        }
 
         private void AbortRunningLeaf()
         {

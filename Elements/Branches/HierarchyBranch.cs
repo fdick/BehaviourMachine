@@ -19,6 +19,7 @@ namespace BehaviourGraph.Trees
         {
         }
 
+        public string Tag { get; set; }
         public Action<Transition> OnEnter { get; set; }
         public Action OnExit { get; set; }
         protected GameObject _gameObject;
@@ -31,6 +32,7 @@ namespace BehaviourGraph.Trees
         public void InitLeaf()
         {
             AwakeTree();
+            OnInitBranch();
         }
 
         public void EnterLeaf(Transition condData = null)
@@ -76,6 +78,9 @@ namespace BehaviourGraph.Trees
             OnExit = null;
         }
 
+        protected virtual void OnInitBranch()
+        {
+        }
         protected virtual void OnEnterBranch(Transition activatedLink = null)
         {
         }

@@ -10,13 +10,7 @@ namespace BehaviourGraph.Visualizer
         Global,
     }
 
-    public enum FromType
-    {
-        Single,
-        Multiple,
-    }
-
-    public class VisualizedLink : VisualizedObject
+    public class VisualizedLink : VisualizedForestObject
     {
         public LinkType linkType;
 

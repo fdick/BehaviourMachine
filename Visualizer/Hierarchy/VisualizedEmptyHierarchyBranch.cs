@@ -24,6 +24,9 @@ namespace BehaviourGraph.Visualizer
             var lfs = new ILeaf[_leafs.Count];
             for (int i = 0; i < _leafs.Count; i++)
             {
+                if (_leafs[i] == null)
+                    throw new NullReferenceException($"{graph.name} graph: At {i} array position Leaf is null!");
+
                 //if child leaf is tree
                 if (_leafs[i] is IVisualizedTree lt)
                 {
@@ -35,7 +38,6 @@ namespace BehaviourGraph.Visualizer
                 {
                     lfs[i] = _leafs[i].GetInstance();
                 }
-                // lfs[i].OnAwake();
 
                 //set custom name
                 if (_leafs[i].FriendlyName != string.Empty)
@@ -51,29 +53,43 @@ namespace BehaviourGraph.Visualizer
             //add links
             foreach (var li in _links)
             {
-                for (int i = 0; i < li.froms.Length; i++)
+                if (li == null)
+                    throw new NullReferenceException($"{graph.name} graph: One of the Links is null!");
+
+                var to = instance.Leafs[_leafs.IndexOf(li.to)];
+                var condition = li.condition?.GetInstance(instance);
+
+                if (li.linkType is LinkType.Ended or LinkType.FromTo)
                 {
-                    var from = instance.Leafs[_leafs.IndexOf(li.froms[i])];
-                    var to = instance.Leafs[_leafs.IndexOf(li.to)];
-                    var condition = li.condition?.GetInstance(instance);
+                    for (int i = 0; i < li.froms.Length; i++)
+                    {
+                        var from = instance.Leafs[_leafs.IndexOf(li.froms[i])];
 
-                    //set custom name for condition
-                    if (condition != null && li.condition.FriendlyName != string.Empty)
-                        condition.FriendlyName = li.condition.FriendlyName;
+                        //set custom name for condition
+                        if (condition != null && li.condition.FriendlyName != string.Empty)
+                            condition.FriendlyName = li.condition.FriendlyName;
 
-                    if (li.linkType == LinkType.FromTo)
-                        instance.Link(
-                            from,
-                            to,
-                            condition);
-                    else if (li.linkType == LinkType.Ended)
-                        instance.Link(
-                            from,
-                            to);
-                    else
-                        instance.Link(
-                            to,
-                            condition);
+                        switch (li.linkType)
+                        {
+                            case LinkType.FromTo:
+                                instance.Link(
+                                    from,
+                                    to,
+                                    condition);
+                                break;
+                            case LinkType.Ended:
+                                instance.Link(
+                                    from,
+                                    to);
+                                break;
+                        }
+                    }
+                }
+                else
+                {
+                    instance.Link(
+                        to,
+                        condition);
                 }
             }
 

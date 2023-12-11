@@ -9,8 +9,9 @@ namespace BehaviourGraph.Visualizer
     public class VisualizedEmptyHierarchyTree : VisualizedTree
     {
         [Tooltip("If enabled then the tree starts the leaf according to the startableLeaf_ID." +
-            " Otherwise, the last leaf on which the work of this tree has ended is launched.")]
+                 " Otherwise, the last leaf on which the work of this tree has ended is launched.")]
         public bool resetStateAtStart = true;
+
         public List<VisualizedLeaf> leafs = new List<VisualizedLeaf>();
         public List<VisualizedLink> links = new List<VisualizedLink>();
         public int startableLeaf_ID = 0;
@@ -40,6 +41,8 @@ namespace BehaviourGraph.Visualizer
                 //set custom name for leafs
                 if (leafs[i].FriendlyName != string.Empty)
                     lfs[i].FriendlyName = leafs[i].FriendlyName;
+                if (leafs[i].Tag != string.Empty)
+                    lfs[i].Tag = leafs[i].Tag;
             }
 
 
@@ -52,29 +55,43 @@ namespace BehaviourGraph.Visualizer
             //add links
             foreach (var li in links)
             {
-                for (int i = 0; i < li.froms.Length; i++)
+                if (li == null)
+                    throw new NullReferenceException($"{graph.name} graph: One of the Links is null!");
+
+                var to = instance.Leafs[leafs.IndexOf(li.to)];
+                var condition = li.condition?.GetInstance(instance);
+
+                if (li.linkType is LinkType.Ended or LinkType.FromTo)
                 {
-                    var from = instance.Leafs[leafs.IndexOf(li.froms[i])];
-                    var to = instance.Leafs[leafs.IndexOf(li.to)];
-                    var condition = li.condition?.GetInstance(instance);
+                    for (int i = 0; i < li.froms.Length; i++)
+                    {
+                        var from = instance.Leafs[leafs.IndexOf(li.froms[i])];
 
-                    //set custom name for condition
-                    if (condition != null && li.condition.FriendlyName != string.Empty)
-                        condition.FriendlyName = li.condition.FriendlyName;
+                        //set custom name for condition
+                        if (condition != null && li.condition.FriendlyName != string.Empty)
+                            condition.FriendlyName = li.condition.FriendlyName;
 
-                    if (li.linkType == LinkType.FromTo)
-                        instance.Link(
-                            from,
-                            to,
-                            condition);
-                    else if (li.linkType == LinkType.Ended)
-                        instance.Link(
-                            from,
-                            to);
-                    else
-                        instance.Link(
-                            to,
-                            condition);
+                        switch (li.linkType)
+                        {
+                            case LinkType.FromTo:
+                                instance.Link(
+                                    from,
+                                    to,
+                                    condition);
+                                break;
+                            case LinkType.Ended:
+                                instance.Link(
+                                    from,
+                                    to);
+                                break;
+                        }
+                    }
+                }
+                else
+                {
+                    instance.Link(
+                        to,
+                        condition);
                 }
             }
 
@@ -93,7 +110,6 @@ namespace BehaviourGraph.Visualizer
                 parent = new GameObject(_visLinkName);
                 parent.transform.SetParent(transform);
                 parent.transform.localPosition = Vector3.zero;
-
             }
 
             var go = new GameObject("Link1");
@@ -131,7 +147,8 @@ namespace BehaviourGraph.Visualizer
             }
 
             var go = new GameObject("Branch1");
-            VisualizedEmptyHierarchyBranch branchComp = (VisualizedEmptyHierarchyBranch)go.AddComponent(typeof(VisualizedEmptyHierarchyBranch));
+            VisualizedEmptyHierarchyBranch branchComp =
+                (VisualizedEmptyHierarchyBranch)go.AddComponent(typeof(VisualizedEmptyHierarchyBranch));
             go.transform.SetParent(parent.transform);
             go.transform.localPosition = Vector3.zero;
 
@@ -142,12 +159,25 @@ namespace BehaviourGraph.Visualizer
         public void GetVisualizedLinks()
         {
             links.Clear();
+            //
+            // var ls = transform.GetComponentsInChildren<VisualizedLink>();
+            //
+            // foreach (var l in ls)
+            // {
+            //     links.Add(l);
+            // }
 
-            var ls = transform.GetComponentsInChildren<VisualizedLink>();
-
-            foreach (var l in ls)
+            foreach (Transform c in transform)
             {
-                links.Add(l);
+                if (c.name == _visLinkName)
+                {
+                    for (int i = 0; i < c.childCount; i++)
+                    {
+                        var c2 = c.GetChild(i);
+                        if (c2.TryGetComponent<VisualizedLink>(out var outLeaf))
+                            links.Add(outLeaf);
+                    }
+                }
             }
         }
 
