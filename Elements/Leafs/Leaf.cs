@@ -9,21 +9,21 @@ namespace BehaviourGraph
     {
         public string FriendlyName { get; set; }
         public string Tag { get; set; }
-        public GUID ID { get; }
+        public Guid ID { get; }
         protected GameObject _gameObject;
         protected bool _isRunning;
         protected float _lastProcCD;
 
         public Leaf(string tag = null)
         {
-            ID = GUID.Generate();
+            ID = new Guid();
             FriendlyName = this.ToString();
             Tag = tag;
         }
 
         public Leaf(Action onEnter, Action onExit, string tag = null)
         {
-            ID = GUID.Generate();
+            ID = new Guid();
             FriendlyName = this.ToString();
             OnEnter += (c) => onEnter?.Invoke();
             OnExit += () => onExit?.Invoke();

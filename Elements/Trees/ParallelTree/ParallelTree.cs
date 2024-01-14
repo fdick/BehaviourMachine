@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BehaviourGraph.Leafs;
 using UnityEditor;
@@ -14,7 +15,7 @@ namespace BehaviourGraph.Trees
     {
         public ParallelTree(BehaviourMachine graph, ILeaf mainLeaf, params ILeaf[] parallelLeafs)
         {
-            ID = GUID.Generate();
+            ID = new Guid();
             FriendlyName = nameof(ParallelTree);
 
             foreach (var p in parallelLeafs)
@@ -34,7 +35,7 @@ namespace BehaviourGraph.Trees
         }
 
         public string FriendlyName { get; set; }
-        public GUID ID { get; }
+        public Guid ID { get; }
 
         public bool IsPaused { get; private set; }
         public UpdateStatus Status { get; private set; } = UpdateStatus.Failure;

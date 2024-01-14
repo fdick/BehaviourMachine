@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEditor;
 
 namespace BehaviourGraph.Conditions
@@ -7,11 +8,11 @@ namespace BehaviourGraph.Conditions
     {
         protected ConditionsCombiner()
         {
-            ID = GUID.Generate();
+            ID = new Guid();
         }
 
         public string FriendlyName { get; set; }
-        public GUID ID { get; }
+        public Guid ID { get; }
         public List<ICondition> Conditions { get; protected set; }
 
         public abstract UpdateStatus ConditionUpdate();

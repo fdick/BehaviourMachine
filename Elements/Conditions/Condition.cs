@@ -8,18 +8,18 @@ namespace BehaviourGraph.Conditions
         public Condition()
         {
             FriendlyName = this.ToString();
-            ID = GUID.Generate();
+            ID = new Guid();
         }
 
         public Condition(Func<bool> condition)
         {
             FriendlyName = this.ToString();
-            ID = GUID.Generate();
+            ID = new Guid();
             _condition = condition;
         }
 
         public string FriendlyName { get; set; }
-        public GUID ID { get; }
+        public Guid ID { get; }
         private Func<bool> _condition;
 
         public virtual UpdateStatus ConditionUpdate()

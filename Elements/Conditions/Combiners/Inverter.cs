@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 
 namespace BehaviourGraph.Conditions
@@ -6,14 +7,14 @@ namespace BehaviourGraph.Conditions
     {
         public Inverter(ICondition invertCondition)
         {
-            ID = GUID.Generate();
+            ID = new Guid();
             _originCondition = invertCondition;
             FriendlyName = "Inverted_" + invertCondition.FriendlyName;
         }
 
         private ICondition _originCondition;
         public string FriendlyName { get; set; }
-        public GUID ID { get; }
+        public Guid ID { get; }
 
         public UpdateStatus ConditionUpdate()
         {

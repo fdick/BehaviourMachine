@@ -67,6 +67,8 @@ namespace BehaviourGraph
             if (DebugMode >= DebugModes.Enabled)
                 _debug.StopUpdator();
 #endif
+            if(!_initOnAwake)
+                return;
             StopGraph();
             DealocateGraph();
         }

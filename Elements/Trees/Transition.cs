@@ -1,3 +1,4 @@
+using System;
 using BehaviourGraph.Conditions;
 using UnityEditor;
 
@@ -12,7 +13,7 @@ namespace BehaviourGraph.Trees
             this.ToLeaf = toLeaf;
         }
 
-        public GUID ID => ExecutedCondition.ID;
+        public Guid ID => ExecutedCondition.ID;
         public ICondition ExecutedCondition { get; }
         public ILeaf FromLeaf { get; set; }
         public ILeaf ToLeaf { get; set; }

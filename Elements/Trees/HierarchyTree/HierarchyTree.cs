@@ -34,8 +34,7 @@ namespace BehaviourGraph.Trees
     {
         //TODO: optimize with cashing leafs interfaces!
         // protected Dictionary<GUID, LeafCash> _leafs2;
-
-
+        
         protected List<ILeaf> _leafs = new List<ILeaf>();
         protected List<Transition> _conditions = new List<Transition>();
 
@@ -61,7 +60,7 @@ namespace BehaviourGraph.Trees
         public List<ILeaf> Leafs => _leafs;
         public List<Transition> Conditions => _conditions;
         public string FriendlyName { get; set; }
-        public GUID ID { get; }
+        public Guid ID { get; }
 
         /// <summary>
         /// Calls when running leaf is changing. ILeaf param is a new leaf.
@@ -96,7 +95,7 @@ namespace BehaviourGraph.Trees
         {
             _parentGraph = graph;
 
-            ID = GUID.Generate();
+            ID = new Guid();
             FriendlyName = nameof(HierarchyTree);
 
             for (int i = 0; i < leafs.Length; i++)
@@ -287,7 +286,7 @@ namespace BehaviourGraph.Trees
         /// <summary>
         /// Add local link. Return unique ID for this link
         /// </summary>
-        public GUID Link(ILeaf origin, ILeaf destination, ICondition condition)
+        public Guid Link(ILeaf origin, ILeaf destination, ICondition condition)
         {
             if (origin == null || destination == null || condition == null)
             {
@@ -371,7 +370,7 @@ namespace BehaviourGraph.Trees
         /// <summary>
         /// Add global link. Return unique ID for this link
         /// </summary>
-        public GUID Link(ILeaf toLeaf, ICondition condition)
+        public Guid Link(ILeaf toLeaf, ICondition condition)
         {
             if (toLeaf == null || condition == null)
             {
