@@ -102,7 +102,7 @@ namespace BehaviourGraph.Visualizer
             if (tree.EndLinks.TryGetValue(tree.GetRunningLeaf(), out var leaf))
             {
                 var endableLeaf = tree.GetRunningLeaf() as IEndableLeaf;   
-                text = "     " + "To " + leaf.FriendlyName;
+                text = "     " + "To " + leaf.toLeafCondition.ToLeaf.FriendlyName;
                 returnString += InsertStatus(
                     text,
                     endableLeaf.EndCondition() == UpdateStatus.Running ? UpdateStatus.Failure : UpdateStatus.Successed,

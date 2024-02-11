@@ -7,7 +7,7 @@ namespace BehaviourGraph.Visualizer
 {
     [CustomEditor(typeof(Object), true, isFallback = false)]
     [CanEditMultipleObjects]
-    public class ButtonEditor : Editor
+    public class ButtonEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {

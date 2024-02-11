@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using BehaviourGraph.Trees;
+using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace BehaviourGraph.Visualizer
@@ -13,6 +14,12 @@ namespace BehaviourGraph.Visualizer
     public class VisualizedLink : VisualizedForestObject
     {
         public LinkType linkType;
+        
+        public ExecutingTypes executingType;
+        public int executesQuantity = 1;
+
+        public CoolDownTypes setCoolDownOn = CoolDownTypes.OnExitDestinationLeaf;
+        public float coolDown = 0;
 
         [FormerlySerializedAs("froms2")] public VisualizedLeaf[] froms;
         [FormerlySerializedAs("to2")] public VisualizedLeaf to;

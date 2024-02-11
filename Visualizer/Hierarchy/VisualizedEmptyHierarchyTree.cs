@@ -36,7 +36,6 @@ namespace BehaviourGraph.Visualizer
                 {
                     lfs[i] = leafs[i].GetInstance();
                 }
-                // lfs[i].OnAwake();
 
                 //set custom name for leafs
                 if (leafs[i].FriendlyName != string.Empty)
@@ -77,12 +76,20 @@ namespace BehaviourGraph.Visualizer
                                 instance.Link(
                                     from,
                                     to,
-                                    condition);
+                                    condition,
+                                    li.executingType,
+                                    li.executesQuantity,
+                                    li.coolDown,
+                                    li.setCoolDownOn);
                                 break;
                             case LinkType.Ended:
                                 instance.Link(
                                     from,
-                                    to);
+                                    to,
+                                    li.executingType,
+                                    li.executesQuantity,
+                                    li.coolDown,
+                                    li.setCoolDownOn);
                                 break;
                         }
                     }
@@ -91,7 +98,11 @@ namespace BehaviourGraph.Visualizer
                 {
                     instance.Link(
                         to,
-                        condition);
+                        condition,
+                        li.executingType,
+                        li.executesQuantity,
+                        li.coolDown,
+                        li.setCoolDownOn);
                 }
             }
 
@@ -159,13 +170,6 @@ namespace BehaviourGraph.Visualizer
         public void GetVisualizedLinks()
         {
             links.Clear();
-            //
-            // var ls = transform.GetComponentsInChildren<VisualizedLink>();
-            //
-            // foreach (var l in ls)
-            // {
-            //     links.Add(l);
-            // }
 
             foreach (Transform c in transform)
             {

@@ -36,7 +36,6 @@ namespace BehaviourGraph.Visualizer
                 {
                     lfs[i] = _parallelLeafs[i].GetInstance();
                 }
-                // lfs[i].OnAwake();
 
                 //set custom names for parallel leafs
                 if (_parallelLeafs[i].FriendlyName != string.Empty)

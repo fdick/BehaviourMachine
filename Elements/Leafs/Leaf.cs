@@ -16,14 +16,14 @@ namespace BehaviourGraph
 
         public Leaf(string tag = null)
         {
-            ID = new Guid();
+            ID = Guid.NewGuid();
             FriendlyName = this.ToString();
             Tag = tag;
         }
 
         public Leaf(Action onEnter, Action onExit, string tag = null)
         {
-            ID = new Guid();
+            ID = Guid.NewGuid();
             FriendlyName = this.ToString();
             OnEnter += (c) => onEnter?.Invoke();
             OnExit += () => onExit?.Invoke();
@@ -33,19 +33,38 @@ namespace BehaviourGraph
         public Action<Transition> OnEnter { get; set; }
         public Action OnExit { get; set; }
 
+        private Transition _executedTransition;
+
 
         public virtual void InitLeaf()
         {
         }
 
-        public virtual void EnterLeaf(Transition condData)
+        public virtual void EnterLeaf(Transition transition)
         {
-            OnEnter?.Invoke(condData);
+            OnEnter?.Invoke(transition);
             _isRunning = true;
+
+            if (transition != null && transition.CooldownDuration > 0)
+            {
+                if (transition.CooldownType == CoolDownTypes.OnEnterDestinationLeaf)
+                    transition.SetCooldownTime();
+                else
+                    _executedTransition = transition;
+            }
         }
 
         public virtual void ExitLeaf()
         {
+            if (_executedTransition != null && _executedTransition.CooldownDuration > 0)
+            {
+                if (_executedTransition.CooldownType == CoolDownTypes.OnExitDestinationLeaf)
+                {
+                    _executedTransition.SetCooldownTime();
+                    _executedTransition = null;
+                }
+            }
+
             _lastProcCD = Time.time;
             _isRunning = false;
             OnExit?.Invoke();
@@ -69,7 +88,7 @@ namespace BehaviourGraph
 
         public override string ToString()
         {
-            return string.IsNullOrEmpty(FriendlyName)? this.GetType().ToString() : FriendlyName;
+            return string.IsNullOrEmpty(FriendlyName) ? this.GetType().ToString() : FriendlyName;
         }
     }
 }

@@ -15,7 +15,7 @@ namespace BehaviourGraph.Trees
     {
         public ParallelTree(BehaviourMachine graph, ILeaf mainLeaf, params ILeaf[] parallelLeafs)
         {
-            ID = new Guid();
+            ID = Guid.NewGuid();
             FriendlyName = nameof(ParallelTree);
 
             foreach (var p in parallelLeafs)

@@ -75,12 +75,20 @@ namespace BehaviourGraph.Visualizer
                                 instance.Link(
                                     from,
                                     to,
-                                    condition);
+                                    condition,
+                                    li.executingType,
+                                    li.executesQuantity,
+                                    li.coolDown,
+                                    li.setCoolDownOn);
                                 break;
                             case LinkType.Ended:
                                 instance.Link(
                                     from,
-                                    to);
+                                    to,
+                                    li.executingType,
+                                    li.executesQuantity,
+                                    li.coolDown,
+                                    li.setCoolDownOn);
                                 break;
                         }
                     }
@@ -89,7 +97,11 @@ namespace BehaviourGraph.Visualizer
                 {
                     instance.Link(
                         to,
-                        condition);
+                        condition,
+                        li.executingType,
+                        li.executesQuantity,
+                        li.coolDown,
+                        li.setCoolDownOn);
                 }
             }
 

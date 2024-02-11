@@ -17,7 +17,7 @@ namespace BehaviourGraph
         public Action<Transition> OnEnter { get; set; }
         public Action OnExit { get; set; }
         public void InitLeaf();
-        public void EnterLeaf(Transition activatedLink = null);
+        public void EnterLeaf(Transition transition = null);
         public void ExitLeaf();
         public void SetGameobject(GameObject go);
         public bool CheckCD(float duration);

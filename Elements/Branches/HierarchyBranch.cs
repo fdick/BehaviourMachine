@@ -24,6 +24,7 @@ namespace BehaviourGraph.Trees
         public Action OnExit { get; set; }
         protected GameObject _gameObject;
         private float _lastProcCD;
+        private Transition _executedTransition;
 
 
         /// <summary>
@@ -35,15 +36,31 @@ namespace BehaviourGraph.Trees
             OnInitBranch();
         }
 
-        public void EnterLeaf(Transition condData = null)
+        public void EnterLeaf(Transition transition = null)
         {
-            OnEnter?.Invoke(condData);
-            OnEnterBranch(condData);
+            OnEnter?.Invoke(transition);
+            OnEnterBranch(transition);
             StartTree();
+            
+            if (transition != null && transition.CooldownDuration > 0)
+            {
+                if (transition.CooldownType == CoolDownTypes.OnEnterDestinationLeaf)
+                    transition.SetCooldownTime();
+                else
+                    _executedTransition = transition;
+            }
         }
 
         public void ExitLeaf()
         {
+            if (_executedTransition != null && _executedTransition.CooldownDuration > 0)
+            {
+                if (_executedTransition.CooldownType == CoolDownTypes.OnExitDestinationLeaf)
+                {
+                    _executedTransition.SetCooldownTime();
+                    _executedTransition = null;
+                }
+            }
             OnExitBranch();
             EndTree();
             _lastProcCD = Time.time;

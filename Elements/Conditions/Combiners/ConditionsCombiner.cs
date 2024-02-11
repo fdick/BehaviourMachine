@@ -8,7 +8,7 @@ namespace BehaviourGraph.Conditions
     {
         protected ConditionsCombiner()
         {
-            ID = new Guid();
+            ID = Guid.NewGuid();
         }
 
         public string FriendlyName { get; set; }

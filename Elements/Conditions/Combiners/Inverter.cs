@@ -7,7 +7,7 @@ namespace BehaviourGraph.Conditions
     {
         public Inverter(ICondition invertCondition)
         {
-            ID = new Guid();
+            ID = Guid.NewGuid();
             _originCondition = invertCondition;
             FriendlyName = "Inverted_" + invertCondition.FriendlyName;
         }
