@@ -10,7 +10,7 @@ namespace BehaviourGraph.Trees
     /// and in parallel with the main process. The tree will end when the main process ends. Can be a leaf and a tree. Need dispose after finishing.
     /// </summary>
     public class ParallelBranch : ParallelTree, ILeaf, IUpdatableLeaf, IFixedUpdatableLeaf, ILateUpdatableLeaf,
-        IDisposable
+        IDisposable, IEndableLeaf
     {
         public ParallelBranch(BehaviourMachine graph, ILeaf mainLeaf, params ILeaf[] parallelLeafs) : base(graph,
             mainLeaf, parallelLeafs)
@@ -24,6 +24,8 @@ namespace BehaviourGraph.Trees
         private float _lastProcCD;
         private Transition _executedTransition;
 
+        private IEndableLeaf _endableMainLeaf;
+
 
         /// <summary>
         /// Called when init Behaviour Graph
@@ -31,6 +33,9 @@ namespace BehaviourGraph.Trees
         public void InitLeaf()
         {
             AwakeTree();
+
+            if (_mainLeaf is IEndableLeaf end)
+                _endableMainLeaf = end;
         }
 
         public void EnterLeaf(Transition transition = null)
@@ -58,7 +63,7 @@ namespace BehaviourGraph.Trees
                     _executedTransition = null;
                 }
             }
-            
+
 
             OnExitBranch();
             EndTree();
@@ -116,6 +121,14 @@ namespace BehaviourGraph.Trees
         public bool CheckCD(float duration)
         {
             return Time.time >= _lastProcCD + duration || _lastProcCD == 0;
+        }
+
+        public UpdateStatus EndCondition()
+        {
+            if (_endableMainLeaf != null)
+                return _endableMainLeaf.EndCondition();
+            else
+                return UpdateStatus.Failure;
         }
     }
 }

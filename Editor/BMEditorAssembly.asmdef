@@ -1,16 +1,16 @@
 {
-    "name": "BehaviourMachineAssembly",
+    "name": "BMEditorAssembly",
     "rootNamespace": "",
     "references": [
-        "BMVisualiserEditorAssRef"
+        "GUID:f9f7973fb8aa6724f947b44e5796fc50"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
-    "precompiledReferences": [
-        ""
-    ],
+    "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],

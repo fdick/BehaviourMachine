@@ -1,3 +1,4 @@
+using System;
 using BehaviourGraph.Trees;
 using BehaviourGraph.Visualizer;
 using UnityEngine;
@@ -67,15 +68,37 @@ namespace BehaviourGraph
             if (DebugMode >= DebugModes.Enabled)
                 _debug.StopUpdator();
 #endif
-            if(!_initOnAwake)
+            if (!_initOnAwake)
                 return;
             StopGraph();
             DealocateGraph();
         }
 
+        public void OnDisable()
+        {
+            PauseGraph();
+        }
+
+        public void OnEnable()
+        {
+            if (MainTree?.RunningLeaf == null)
+                return;
+
+            UnPauseGraph();
+
+            //restart last activated branch
+
+            var last = GetLastHierarchyTree(MainTree.RunningLeaf as HierarchyTree);
+
+            if (last == null) return;
+            last.ForceEnter(last.GetLeafIndex(last.RunningLeaf));
+        }
+
         public void StartGraph()
         {
-            if (GraphStatus != GraphStatuses.Inited)
+            if (GraphStatus != GraphStatuses.Inited && GraphStatus != GraphStatuses.Ended)
+                return;
+            if (MainTree.Leafs.Count == 0 || MainTree.StartableLeaf == null)
                 return;
 #if UNITY_EDITOR
             if (DebugMode >= DebugModes.Enabled)
@@ -139,7 +162,7 @@ namespace BehaviourGraph
 
         public void InitGraph(GameObject customGameobject)
         {
-            if (VisualizedTree == null || GraphStatus > GraphStatuses.None)
+            if (GraphStatus > GraphStatuses.None)
                 return;
 
             if (customGameobject != null)
@@ -150,15 +173,22 @@ namespace BehaviourGraph
                     CustomGameobject = gameObject;
             }
 
-            MainTree = (HierarchyTree)VisualizedTree.GetInstance(this);
-
-            if (MainTree == null)
-                UnityEngine.Debug.LogError("Init visualized tree has errors!");
-            MainTree.FriendlyName = ROOT_TREE;
-
-            for (int i = 0; i < MainTree.Leafs.Count; i++)
+            if (VisualizedTree != null)
             {
-                MainTree.Leafs[i].InitLeaf();
+                MainTree = (HierarchyTree)VisualizedTree.GetInstance(this);
+
+                if (MainTree == null)
+                    UnityEngine.Debug.LogError("Init visualized tree has errors!");
+                MainTree.FriendlyName = ROOT_TREE;
+
+                for (int i = 0; i < MainTree.Leafs.Count; i++)
+                {
+                    MainTree.Leafs[i].InitLeaf();
+                }
+            }
+            else
+            {
+                MainTree = new HierarchyTree(this);
             }
 
             GraphStatus = GraphStatuses.Inited;
@@ -186,6 +216,23 @@ namespace BehaviourGraph
                 return;
 
             MainTree.LateUpdateTree();
+        }
+
+        public HierarchyTree GetLastHierarchyTree(HierarchyTree tree)
+        {
+            if (tree == null)
+                return null;
+
+            if (tree.RunningLeaf == null)
+                return tree;
+
+            if (tree.GetRunningLeaf() is HierarchyTree t)
+            {
+                return GetLastHierarchyTree(t);
+            }
+
+
+            return tree;
         }
 
         [InspectorButton("Init Visualized Root Tree")]

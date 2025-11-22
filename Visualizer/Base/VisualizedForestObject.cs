@@ -2,6 +2,7 @@
 using System;
 using BehaviourGraph.Conditions;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace BehaviourGraph.Visualizer
 {
@@ -9,6 +10,10 @@ namespace BehaviourGraph.Visualizer
     public abstract class VisualizedForestObject : MonoBehaviour
     {
         [field: SerializeField] public string FriendlyName { get; set; }
+        
+        [field: Header("Events")]
+        [field: SerializeField] public UnityEvent OnStartLeaf { get; set; }
+        [field: SerializeField] public UnityEvent OnEndLeaf { get; set; }
     }
 
     [Serializable]

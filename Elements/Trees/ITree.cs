@@ -19,7 +19,6 @@ namespace BehaviourGraph.Trees
         public ILeaf[] GetLeafs();
         public BehaviourMachine GetGraph();
         public T QLeaf<T>() where T : class, ILeaf;
-        public ILeaf QLeaf(string friendlyName);
-        public T QLeaf<T>(string tag) where T : class, ILeaf;
+        public ILeaf QLeaf(string tag);
     }
 }

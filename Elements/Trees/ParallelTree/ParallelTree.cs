@@ -41,9 +41,9 @@ namespace BehaviourGraph.Trees
         public UpdateStatus Status { get; private set; } = UpdateStatus.Failure;
 
 
-        private ILeaf _mainLeaf;
-        private List<ILeaf> _parallelLeafs;
-        private BehaviourMachine _graph;
+        protected ILeaf _mainLeaf;
+        protected List<ILeaf> _parallelLeafs;
+        protected BehaviourMachine _graph;
 
 
         public void AwakeTree()
@@ -184,7 +184,7 @@ namespace BehaviourGraph.Trees
         public BehaviourMachine GetGraph() => _graph;
 
         /// <summary>
-        /// Find a first parallel child leaf by type.
+        /// Find a first parallel child leaf by type. Searching in all hierarchy.
         /// </summary>
         /// <typeparam name="T"> is finding type</typeparam>
         /// <returns></returns>
@@ -206,41 +206,18 @@ namespace BehaviourGraph.Trees
         }
 
         /// <summary>
-        /// Find a first parallel child leaf by friendly name.
+        /// Find a first parallel child leaf by tag. Searching in all hierarchy.
         /// </summary>
-        /// <param name="friendlyName">Friendly name of a leaf.</param>
-        public ILeaf QLeaf(string friendlyName)
+        /// <param name="tag">Tag of a leaf.</param>
+        public ILeaf QLeaf(string tag)
         {
             foreach (var l in _parallelLeafs)
             {
-                if (string.Equals(l.FriendlyName, friendlyName))
+                if (string.Equals(l.Tag, tag))
                     return l;
                 if (l is ITree t)
                 {
-                    var r = t.QLeaf(friendlyName);
-                    if (r != null)
-                        return r;
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Find a first parallel child leaf by type and tag.
-        /// </summary>
-        /// <param name="tag"> Tag name</param>
-        /// <typeparam name="T">Type of finding</typeparam>
-        /// <returns></returns>
-        public T QLeaf<T>(string tag) where T : class, ILeaf
-        {
-            foreach (var l in _parallelLeafs)
-            {
-                if (l is T tLeaf && string.Equals(l.Tag, tag))
-                    return tLeaf;
-                if (l is ITree t)
-                {
-                    var r = t.QLeaf<T>(tag);
+                    var r = t.QLeaf(tag);
                     if (r != null)
                         return r;
                 }

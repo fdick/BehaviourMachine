@@ -2,17 +2,19 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace BehaviourGraph.Visualizer
 {
     [Serializable]
     public class VisualizedEmptyHierarchyBranch : VisualizedLeaf, IVisualizedTree
     {
-        [SerializeField] private bool _resetStateAtStart = true;
+        [SerializeField] public bool _resetStateAtStart = true;
         [SerializeField] private List<VisualizedLeaf> _leafs = new List<VisualizedLeaf>();
         [SerializeField] private List<VisualizedLink> _links = new List<VisualizedLink>();
 
-        [SerializeField] private int _startableLeafID = 0;
+        [FormerlySerializedAs("_startableLeafID")] [SerializeField]
+        public int startableLeafID = 0;
 
         private const string VIS_LEAFS_NAME = "Leafs";
         private const string VIS_LINKS_NAME = "Links";
@@ -25,7 +27,8 @@ namespace BehaviourGraph.Visualizer
             for (int i = 0; i < _leafs.Count; i++)
             {
                 if (_leafs[i] == null)
-                    throw new NullReferenceException($"{graph.name} graph: At {i} array position Leaf is null!");
+                    throw new NullReferenceException(
+                        $"{graph.name}: Instance ID {graph.GetInstanceID()} graph: At {i} array position Leaf is null!");
 
                 //if child leaf is tree
                 if (_leafs[i] is IVisualizedTree lt)
@@ -39,16 +42,40 @@ namespace BehaviourGraph.Visualizer
                     lfs[i] = _leafs[i].GetInstance();
                 }
 
+                //leaf events
+                if (_leafs[i].OnStartLeaf != null)
+                {
+                    int savedI = i;
+                    lfs[i].OnEnter += (t) => _leafs[savedI].OnStartLeaf.Invoke();
+                }
+                if (_leafs[i].OnEndLeaf != null)
+                {
+                    int savedI = i;
+                    lfs[i].OnExit += () => _leafs[savedI].OnEndLeaf.Invoke();
+                }
+
                 //set custom name
                 if (_leafs[i].FriendlyName != string.Empty)
                     lfs[i].FriendlyName = _leafs[i].FriendlyName;
+                if (_leafs[i].Tag != string.Empty)
+                    lfs[i].Tag = _leafs[i].Tag;
             }
 
             var instance = new HierarchyBranch(graph, lfs, _resetStateAtStart);
 
+
+            //add events
+            if (OnStartLeaf != null)
+                instance.OnEnter += (t) => OnStartLeaf?.Invoke();
+
+            if (OnEndLeaf != null)
+                instance.OnExit += () => OnEndLeaf?.Invoke();
+
             //set custom name for myself
             if (FriendlyName != string.Empty)
                 instance.FriendlyName = FriendlyName;
+            if (Tag != string.Empty)
+                instance.Tag = Tag;
 
             //add links
             foreach (var li in _links)
@@ -106,7 +133,13 @@ namespace BehaviourGraph.Visualizer
             }
 
             //set startable leaf
-            instance.StartableLeaf = instance.Leafs[_startableLeafID];
+            if (instance.Leafs.Count == 0)
+                UnityEngine.Debug.LogError($"{transform.name}: Quantity of Leafs equals 0!");
+            if (startableLeafID < 0 || startableLeafID >= instance.Leafs.Count)
+                UnityEngine.Debug.LogError(
+                    $"{transform.name}: Startable Leaf ID not in range! Quantity leafs {instance.Leafs.Count}. Startable Leaf ID {startableLeafID}");
+
+            instance.StartableLeaf = instance.Leafs[startableLeafID];
 
             return instance;
         }
@@ -118,7 +151,6 @@ namespace BehaviourGraph.Visualizer
         }
 
 
-        [InspectorButton("Add Link")]
         public void AddVisualizedLink()
         {
             var parent = transform.Find(VIS_LINKS_NAME)?.gameObject;
@@ -136,7 +168,6 @@ namespace BehaviourGraph.Visualizer
             _links.Add(vLink);
         }
 
-        [InspectorButton("Add Leaf")]
         public void AddVisualizedLeaf()
         {
             var parent = transform.Find(VIS_LEAFS_NAME)?.gameObject;
@@ -152,7 +183,6 @@ namespace BehaviourGraph.Visualizer
             go.transform.localPosition = Vector3.zero;
         }
 
-        [InspectorButton("Add Branch")]
         public void AddVisualizedBranch()
         {
             var parent = transform.Find(VIS_LEAFS_NAME)?.gameObject;
@@ -172,52 +202,73 @@ namespace BehaviourGraph.Visualizer
             _leafs.Add(branchComp);
         }
 
-        [InspectorButton("Get Child Links")]
+        public void AddVisualizedParallelBranch()
+        {
+            var parent = transform.Find(VIS_LEAFS_NAME)?.gameObject;
+            if (parent == null)
+            {
+                parent = new GameObject(VIS_LEAFS_NAME);
+                parent.transform.SetParent(transform);
+                parent.transform.localPosition = Vector3.zero;
+            }
+
+            var go = new GameObject("ParallelBranch1");
+            VisualizedEmptyParallelBranch branchComp =
+                (VisualizedEmptyParallelBranch)go.AddComponent(typeof(VisualizedEmptyParallelBranch));
+            go.transform.SetParent(parent.transform);
+            go.transform.localPosition = Vector3.zero;
+
+            _leafs.Add(branchComp);
+        }
+
         public void GetVisualizedLinks()
         {
             _links.Clear();
-
-            var ls = transform.GetComponentsInChildren<VisualizedLink>();
-
-            foreach (var l in ls)
+            var p = transform.Find(VIS_LINKS_NAME);
+            foreach (Transform c in p)
             {
-                _links.Add(l);
+                if (c.TryGetComponent<VisualizedLink>(out var outLink))
+                {
+                    //check for contains leafs from link in tree
+                    switch (outLink.linkType)
+                    {
+                        case LinkType.FromTo:
+                            foreach (var l in outLink.froms)
+                            {
+                                if (!_leafs.Contains(l))
+                                    UnityEngine.Debug.LogError(
+                                        $"Tree {transform} does not contain the leaf {l.FriendlyName} which stay link {outLink.FriendlyName}");
+                            }
+
+                            break;
+                        case LinkType.Ended:
+                            foreach (var l in outLink.froms)
+                            {
+                                if (!_leafs.Contains(l))
+                                    UnityEngine.Debug.LogError(
+                                        $"Tree {transform} does not contain the leaf {l.FriendlyName} which set inside link {outLink.FriendlyName}");
+                            }
+
+                            break;
+                    }
+
+                    if (!_leafs.Contains(outLink.to))
+                        UnityEngine.Debug.LogError(
+                            $"Tree {transform} does not contain the leaf {outLink.to.FriendlyName} which set inside link {outLink.FriendlyName}");
+                    _links.Add(outLink);
+                }
             }
         }
 
-        [InspectorButton("Get Child Leafs")]
         public void GetVisualizedLeafs()
         {
             _leafs.Clear();
-
-            List<VisualizedLeaf> ls = new List<VisualizedLeaf>();
-            foreach (Transform c in transform)
+            var p = transform.Find(VIS_LEAFS_NAME);
+            foreach (Transform c in p)
             {
-                if (c.name == VIS_LEAFS_NAME)
-                {
-                    for (int i = 0; i < c.childCount; i++)
-                    {
-                        var c2 = c.GetChild(i);
-                        if (c2.TryGetComponent<VisualizedLeaf>(out var outLeaf))
-                            ls.Add(outLeaf);
-                    }
-                }
-                else
-                {
-                    var cL = c.Find(VIS_LEAFS_NAME);
-                    if (cL == null)
-                        continue;
-
-                    for (int i = 0; i < cL.childCount; i++)
-                    {
-                        var c2 = cL.GetChild(i);
-                        if (c2.TryGetComponent<VisualizedLeaf>(out var outLeaf))
-                            ls.Add(outLeaf);
-                    }
-                }
+                if (c.TryGetComponent<VisualizedLeaf>(out var outLeaf))
+                    _leafs.Add(outLeaf);
             }
-
-            _leafs.AddRange(ls);
         }
     }
 }

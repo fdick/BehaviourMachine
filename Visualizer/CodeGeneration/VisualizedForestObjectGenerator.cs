@@ -35,7 +35,7 @@ namespace BehaviourGraph.Visualizer
                 !typeof(ICondition).IsAssignableFrom(selectedFileType))
             {
                 
-                UnityEngine.Debug.Log($"<{selectedObj.name}> can not be origin for generator!");
+                UnityEngine.Debug.Log($"<{selectedObj.name}> can't be origin for the generator!");
                 return;
             }
 
@@ -46,7 +46,10 @@ namespace BehaviourGraph.Visualizer
             var constructors = selectedFileType.GetConstructors();
 
             if (constructors == null || constructors.Length == 0)
+            {
+                UnityEngine.Debug.Log($"<{selectedObj.name}> doesn't have any constructors!");
                 return;
+            }
 
             var constructorParameters = constructors[0].GetParameters();
             var script = string.Empty;

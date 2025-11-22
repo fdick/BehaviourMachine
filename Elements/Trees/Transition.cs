@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace BehaviourGraph.Trees
 {
+    public enum TransitionTypes
+    {
+        End,
+        Local,
+        Global,
+    }
     public enum ExecutingTypes
     {
         Infinity,
@@ -19,13 +25,14 @@ namespace BehaviourGraph.Trees
 
     public class Transition
     {
-        public Transition(ICondition executedCondition, ILeaf fromLeaf, ILeaf toLeaf,
+        public Transition(ICondition executedCondition, ILeaf fromLeaf, ILeaf toLeaf, TransitionTypes transitionType,
             ExecutingTypes executingType, int maxExecuteQuantities = 1, 
             float cooldownDuration = 0, CoolDownTypes cooldownType = CoolDownTypes.OnExitDestinationLeaf)
         {
             this.ExecutedCondition = executedCondition;
             this.FromLeaf = fromLeaf;
             this.ToLeaf = toLeaf;
+            this.TransitionType = transitionType;
             this.ExecutingType = executingType;
             this.MaxExecuteQuantities = maxExecuteQuantities;
             this.CooldownType = cooldownType;
@@ -33,11 +40,9 @@ namespace BehaviourGraph.Trees
             ExecutedTimes = 0;
         }
 
-        public Guid ID
-        {
-            get { return ExecutedCondition.ID; }
-        }
+        public Guid ID => ExecutedCondition?.ID ?? default;
 
+        public TransitionTypes TransitionType { get; }
         public ICondition ExecutedCondition { get; }
         public ILeaf FromLeaf { get; set; }
         public ILeaf ToLeaf { get; set; }

@@ -37,12 +37,30 @@ namespace BehaviourGraph.Visualizer
                     lfs[i] = _parallelLeafs[i].GetInstance();
                 }
 
+                //leaf events
+                if (_parallelLeafs[i].OnStartLeaf != null)
+                {
+                    int savedI = i;
+                    lfs[i].OnEnter += (t) => _parallelLeafs[savedI].OnStartLeaf.Invoke();
+                }
+                if (_parallelLeafs[i].OnEndLeaf != null)
+                {
+                    int savedI = i;
+                    lfs[i].OnExit += () => _parallelLeafs[savedI].OnEndLeaf.Invoke();
+                }
+
                 //set custom names for parallel leafs
                 if (_parallelLeafs[i].FriendlyName != string.Empty)
                     lfs[i].FriendlyName = _parallelLeafs[i].FriendlyName;
             }
 
             var instance = new ParallelBranch(graph, mainLf, lfs);
+
+            if (OnStartLeaf != null)
+                instance.OnEnter += (t) => OnStartLeaf?.Invoke();
+
+            if (OnEndLeaf != null)
+                instance.OnExit += () => OnEndLeaf?.Invoke();
 
             //set custom name for myself
             if (FriendlyName != string.Empty)
@@ -74,7 +92,8 @@ namespace BehaviourGraph.Visualizer
             }
 
             var go = new GameObject("MainBranch");
-            VisualizedEmptyHierarchyBranch branchComp = (VisualizedEmptyHierarchyBranch)go.AddComponent(typeof(VisualizedEmptyHierarchyBranch));
+            VisualizedEmptyHierarchyBranch branchComp =
+                (VisualizedEmptyHierarchyBranch)go.AddComponent(typeof(VisualizedEmptyHierarchyBranch));
             go.transform.SetParent(parent.transform);
             go.transform.localPosition = Vector3.zero;
 

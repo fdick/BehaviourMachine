@@ -9,6 +9,7 @@ namespace BehaviourGraph.Visualizer
         /// Get instance from visualized condition
         /// </summary>
         /// <param name="tree">Tree which contains this condition</param>
+        /// <param name="agro"></param>
         /// <returns></returns>
         public abstract ICondition GetInstance(ITree tree);
     }

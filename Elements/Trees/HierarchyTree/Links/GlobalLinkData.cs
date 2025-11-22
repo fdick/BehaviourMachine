@@ -4,6 +4,6 @@ namespace BehaviourGraph.Trees
 {
     public class GlobalLinkData
     {
-        public List<Transition> toLeafConditions;
+        public List<Transition> toLeafTransitions;
     }
 }

@@ -20,12 +20,11 @@ namespace BehaviourGraph.Visualizer
 
         public CoolDownTypes setCoolDownOn = CoolDownTypes.OnExitDestinationLeaf;
         public float coolDown = 0;
-
+        
         [FormerlySerializedAs("froms2")] public VisualizedLeaf[] froms;
         [FormerlySerializedAs("to2")] public VisualizedLeaf to;
         public VisualizedCondition condition;
         
-        [InspectorButton("Add Condition")]
         public void AddVisualiseCondition()
         {
             var conditionName = "Condition";
@@ -34,7 +33,6 @@ namespace BehaviourGraph.Visualizer
             go.transform.localPosition = Vector3.zero;
         }
 
-        [InspectorButton("Add Selector")]
         public void AddSelector()
         {
             var go = new GameObject("Selector");
@@ -44,7 +42,6 @@ namespace BehaviourGraph.Visualizer
             condition = select;
         }
 
-        [InspectorButton("Add Sequencer")]
         public void AddSequencer()
         {
             var go = new GameObject("Sequencer");
@@ -57,7 +54,7 @@ namespace BehaviourGraph.Visualizer
 
         private void OnValidate()
         {
-            FriendlyName = "Don't using";
+            FriendlyName = "Not using";
         }
     }
 }

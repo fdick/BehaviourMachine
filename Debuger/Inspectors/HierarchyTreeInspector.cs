@@ -32,10 +32,10 @@ namespace BehaviourGraph.Visualizer
                 it++;
                 returnString += it + ". To " + l.Key.FriendlyName + "\n";
 
-                if (l.Value.toLeafConditions.Count > 0)
+                if (l.Value.toLeafTransitions.Count > 0)
                 {
                     int i = 0;
-                    foreach (var c in l.Value.toLeafConditions)
+                    foreach (var c in l.Value.toLeafTransitions)
                     {
                         i++;
                         text = "     " + i + ". " + c.ExecutedCondition.FriendlyName;
@@ -65,7 +65,7 @@ namespace BehaviourGraph.Visualizer
             if (tree.LocalLinks.TryGetValue(tree.GetRunningLeaf(), out var d))
             {
                 it = 0;
-                foreach (var l in d.toLeafs)
+                foreach (var l in d.toLeafsTransitions)
                 {
                     it++;
                     returnString += it + ". To " + l.Key.FriendlyName + "\n";

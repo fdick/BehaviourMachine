@@ -36,6 +36,18 @@ namespace BehaviourGraph.Visualizer
                 {
                     lfs[i] = leafs[i].GetInstance();
                 }
+                
+                //leaf events
+                if (leafs[i].OnStartLeaf != null)
+                {
+                    int savedI = i;
+                    lfs[i].OnEnter += (t) => leafs[savedI].OnStartLeaf.Invoke();
+                }
+                if (leafs[i].OnEndLeaf != null)
+                {
+                    int savedI = i;
+                    lfs[i].OnExit += () => leafs[savedI].OnEndLeaf.Invoke();
+                }
 
                 //set custom name for leafs
                 if (leafs[i].FriendlyName != string.Empty)
@@ -112,7 +124,6 @@ namespace BehaviourGraph.Visualizer
             return instance;
         }
 
-        [InspectorButton("Add Link")]
         public void AddVisualizedLink()
         {
             var parent = transform.Find(_visLinkName)?.gameObject;
@@ -130,7 +141,6 @@ namespace BehaviourGraph.Visualizer
             links.Add(vLink);
         }
 
-        [InspectorButton("Add Leaf")]
         public void AddVisualizedLeaf()
         {
             var parent = transform.Find(_visLeafsName)?.gameObject;
@@ -146,7 +156,6 @@ namespace BehaviourGraph.Visualizer
             go.transform.localPosition = Vector3.zero;
         }
 
-        [InspectorButton("Add Branch")]
         public void AddVisualizedBranch()
         {
             var parent = transform.Find(_visLeafsName)?.gameObject;
@@ -166,54 +175,73 @@ namespace BehaviourGraph.Visualizer
             leafs.Add(branchComp);
         }
 
-        [InspectorButton("Get Child Links")]
+        public void AddVisualizedParallelBranch()
+        {
+            var parent = transform.Find(_visLeafsName)?.gameObject;
+            if (parent == null)
+            {
+                parent = new GameObject(_visLeafsName);
+                parent.transform.SetParent(transform);
+                parent.transform.localPosition = Vector3.zero;
+            }
+
+            var go = new GameObject("ParallelBranch1");
+            VisualizedEmptyParallelBranch branchComp =
+                (VisualizedEmptyParallelBranch)go.AddComponent(typeof(VisualizedEmptyParallelBranch));
+            go.transform.SetParent(parent.transform);
+            go.transform.localPosition = Vector3.zero;
+
+            leafs.Add(branchComp);
+        }
+
         public void GetVisualizedLinks()
         {
             links.Clear();
-
-            foreach (Transform c in transform)
+            var p = transform.Find(_visLinkName);
+            foreach (Transform c in p)
             {
-                if (c.name == _visLinkName)
+                if (c.TryGetComponent<VisualizedLink>(out var outLink))
                 {
-                    for (int i = 0; i < c.childCount; i++)
+                    //check for contains leafs from link in tree
+                    switch (outLink.linkType)
                     {
-                        var c2 = c.GetChild(i);
-                        if (c2.TryGetComponent<VisualizedLink>(out var outLeaf))
-                            links.Add(outLeaf);
+                        case LinkType.FromTo:
+                            foreach (var l in outLink.froms)
+                            {
+                                if (!leafs.Contains(l))
+                                    UnityEngine.Debug.LogError(
+                                        $"Tree {transform} does not contain the leaf {l.FriendlyName} which set inside link {outLink.FriendlyName}");
+                            }
+
+                            break;
+                        case LinkType.Ended:
+                            foreach (var l in outLink.froms)
+                            {
+                                if (!leafs.Contains(l))
+                                    UnityEngine.Debug.LogError(
+                                        $"Tree {transform} does not contain the leaf {l.FriendlyName} which set inside link {outLink.FriendlyName}");
+                            }
+
+                            break;
                     }
+
+                    if (!leafs.Contains(outLink.to))
+                        UnityEngine.Debug.LogError(
+                            $"Tree {transform} does not contain the leaf {outLink.to.FriendlyName} which set inside link {outLink.FriendlyName}");
+                    
+                    links.Add(outLink);
                 }
             }
         }
 
-        [InspectorButton("Get Child Leafs")]
         public void GetVisualizedLeafs()
         {
             leafs.Clear();
-
-            foreach (Transform c in transform)
+            var p = transform.Find(_visLeafsName);
+            foreach (Transform c in p)
             {
-                if (c.name == _visLeafsName)
-                {
-                    for (int i = 0; i < c.childCount; i++)
-                    {
-                        var c2 = c.GetChild(i);
-                        if (c2.TryGetComponent<VisualizedLeaf>(out var outLeaf))
-                            leafs.Add(outLeaf);
-                    }
-                }
-                else
-                {
-                    var cL = c.Find(_visLeafsName);
-                    if (cL == null)
-                        continue;
-
-                    for (int i = 0; i < cL.childCount; i++)
-                    {
-                        var c2 = cL.GetChild(i);
-                        if (c2.TryGetComponent<VisualizedLeaf>(out var outLeaf))
-                            leafs.Add(outLeaf);
-                    }
-                }
+                if (c.TryGetComponent<VisualizedLeaf>(out var outLeaf))
+                    leafs.Add(outLeaf);
             }
         }
     }

@@ -36,13 +36,13 @@ namespace BehaviourGraph.Trees
         // protected Dictionary<GUID, LeafCash> _leafs2;
 
         protected List<ILeaf> _leafs = new List<ILeaf>();
-        protected List<Transition> _conditions = new List<Transition>();
+        protected List<Transition> _transitions = new List<Transition>();
 
         protected Dictionary<ILeaf, EndLinkData> _endLinks = new Dictionary<ILeaf, EndLinkData>();
         protected Dictionary<ILeaf, LocalLinkData> _localLinks = new Dictionary<ILeaf, LocalLinkData>();
         protected Dictionary<ILeaf, GlobalLinkData> _globalLinks = new Dictionary<ILeaf, GlobalLinkData>();
 
-        private BehaviourMachine _parentGraph;
+        protected BehaviourMachine _parentGraph;
 
         /// <summary>
         /// Startable leaf
@@ -58,7 +58,7 @@ namespace BehaviourGraph.Trees
         public Dictionary<ILeaf, LocalLinkData> LocalLinks => _localLinks;
         public Dictionary<ILeaf, GlobalLinkData> GlobalLinks => _globalLinks;
         public List<ILeaf> Leafs => _leafs;
-        public List<Transition> Conditions => _conditions;
+        public List<Transition> Transitions => _transitions;
         public string FriendlyName { get; set; }
         public Guid ID { get; }
 
@@ -68,7 +68,7 @@ namespace BehaviourGraph.Trees
         public Action<ILeaf> OnChangeRunningLeaf { get; set; }
 
         /// <summary>
-        /// Calls when executes any links by this tree. (local + global + end links). If Icondition == null than it is an end link.
+        /// Calls when executes any links by this tree. (local + global + end links).
         /// </summary>
         public Action<Transition> OnExecuteLink { get; set; }
 
@@ -83,7 +83,7 @@ namespace BehaviourGraph.Trees
         /// </summary>
         public ILeaf CurrentLeaf { get; protected set; }
 
-        private bool _resetStateAtStart;
+        protected bool _resetStateAtStart;
 
         /// <summary>
         /// For creating empty instances
@@ -134,7 +134,13 @@ namespace BehaviourGraph.Trees
         public void StartTree()
         {
             if (StartableLeaf == null)
-                throw new NullReferenceException($"{FriendlyName}: Startable leaf is null!");
+            {
+                // throw new NullReferenceException($"{FriendlyName}: Startable leaf is null!");
+#if UNITY_EDITOR
+                UnityEngine.Debug.Log($"{FriendlyName}: Startable leaf is null!");
+#endif
+                return;
+            }
 
             if (!_resetStateAtStart && CurrentLeaf != null)
                 ChangeRunningLeaf(CurrentLeaf, null);
@@ -191,7 +197,7 @@ namespace BehaviourGraph.Trees
             {
                 foreach (var d in _globalLinks)
                 {
-                    foreach (var c in d.Value.toLeafConditions)
+                    foreach (var c in d.Value.toLeafTransitions)
                     {
                         if (RunningLeaf == d.Key)
                             continue;
@@ -210,7 +216,7 @@ namespace BehaviourGraph.Trees
             //local links update
             if (_localLinks.TryGetValue(RunningLeaf, out var to))
             {
-                foreach (var d in to.toLeafs)
+                foreach (var d in to.toLeafsTransitions)
                 {
                     foreach (var t in d.Value)
                     {
@@ -238,7 +244,7 @@ namespace BehaviourGraph.Trees
                     return treeStatus;
                 }
             }
-            
+
             return treeStatus;
         }
 
@@ -306,12 +312,12 @@ namespace BehaviourGraph.Trees
             //add link
             if (_localLinks.TryGetValue(origin, out var data))
             {
-                var conditionData = new Transition(
-                    condition, origin, destination,
+                var transition = new Transition(
+                    condition, origin, destination, TransitionTypes.Local,
                     executingType, maxExecuteQuantity,
                     cooldownDuration, cooldownType);
 
-                if (data.toLeafs.TryGetValue(destination, out var conds))
+                if (data.toLeafsTransitions.TryGetValue(destination, out var conds))
                 {
                     //i cant contains same condition
                     if (conds.Where((x) => x.ExecutedCondition == condition).Count() > 0)
@@ -320,27 +326,27 @@ namespace BehaviourGraph.Trees
                         return default;
                     }
 
-                    conds.Add(conditionData);
+                    conds.Add(transition);
                 }
                 else
-                    data.toLeafs.Add(destination, new List<Transition> { conditionData });
+                    data.toLeafsTransitions.Add(destination, new List<Transition> { transition });
 
-                _conditions.Add(conditionData);
+                _transitions.Add(transition);
             }
             else
             {
                 var linkData = new Dictionary<ILeaf, List<Transition>>();
-                var conditionData = new Transition(condition, origin, destination,
+                var transition = new Transition(condition, origin, destination, TransitionTypes.Local,
                     executingType, maxExecuteQuantity,
                     cooldownDuration, cooldownType);
-                linkData.Add(destination, new List<Transition> { conditionData });
-                var localLinkData = new LocalLinkData() { toLeafs = linkData };
+                linkData.Add(destination, new List<Transition> { transition });
+                var localLinkData = new LocalLinkData() { toLeafsTransitions = linkData };
 
                 _localLinks.Add(origin, localLinkData);
-                _conditions.Add(conditionData);
+                _transitions.Add(transition);
             }
 
-            return ID;
+            return condition.ID;
         }
 
         /// <summary>
@@ -354,6 +360,12 @@ namespace BehaviourGraph.Trees
             {
                 throw new NullReferenceException(
                     $"{_parentGraph} : You try to add a confusing end link. Origin leaf is {origin}. Destination leaf is {destination}");
+            }
+            
+            if (origin is not IEndableLeaf)
+            {
+                throw new NullReferenceException(
+                    $"{_parentGraph} : Leaf {origin} is not endable!");
             }
 
             if (!_leafs.Contains(origin))
@@ -370,7 +382,7 @@ namespace BehaviourGraph.Trees
                 _endLinks.Remove(origin);
 
             var transition = new Transition(
-                null, origin, destination,
+                null, origin, destination, TransitionTypes.End,
                 executingType, maxExecuteQuantity,
                 cooldownDuration, cooldownType);
             var endLinkData = new EndLinkData() { toLeafCondition = transition };
@@ -395,19 +407,19 @@ namespace BehaviourGraph.Trees
                 throw new Exception($"{_parentGraph} : Behaviour machine doesn't contain the leaf {toLeaf}");
             }
 
-            var conditionData = new Transition(
-                condition, null, toLeaf,
+            var transition = new Transition(
+                condition, null, toLeaf, TransitionTypes.Global,
                 executingType, maxExecuteQuantity,
                 cooldownDuration, cooldownType);
 
             if (_globalLinks.TryGetValue(toLeaf, out var l))
-                l.toLeafConditions.Add(conditionData);
+                l.toLeafTransitions.Add(transition);
             else
                 _globalLinks.Add(toLeaf,
-                    new GlobalLinkData() { toLeafConditions = new List<Transition>() { conditionData } });
+                    new GlobalLinkData() { toLeafTransitions = new List<Transition>() { transition } });
 
-            _conditions.Add(conditionData);
-            return ID;
+            _transitions.Add(transition);
+            return condition.ID;
         }
 
         /// <summary>
@@ -415,8 +427,13 @@ namespace BehaviourGraph.Trees
         /// </summary>
         public void RemoveEndLink(ILeaf origin)
         {
-            if (_endLinks.ContainsKey(origin))
-                _endLinks.Remove(origin);
+            if (!_endLinks.ContainsKey(origin))
+                return;
+
+            var transition = _endLinks[origin];
+            _transitions.Remove(transition.toLeafCondition);
+
+            _endLinks.Remove(origin);
         }
 
         /// <summary>
@@ -430,13 +447,18 @@ namespace BehaviourGraph.Trees
                 return;
 
             if (_localLinks.TryGetValue(origin, out var data))
-                if (!data.toLeafs.ContainsKey(destination))
+                if (!data.toLeafsTransitions.ContainsKey(destination))
                     return;
 
-            data.toLeafs.Remove(destination);
+            foreach (var t in data.toLeafsTransitions[destination])
+            {
+                _transitions.Remove(t);
+            }
+
+            data.toLeafsTransitions.Remove(destination);
 
             //delete empty link
-            if (data.toLeafs.Count == 0)
+            if (data.toLeafsTransitions.Count == 0)
                 _localLinks.Remove(origin);
         }
 
@@ -450,7 +472,45 @@ namespace BehaviourGraph.Trees
             if (!_globalLinks.ContainsKey(globalLeaf))
                 return;
 
+            foreach (var t in _globalLinks[globalLeaf].toLeafTransitions)
+            {
+                _transitions.Remove(t);
+            }
+
             _globalLinks.Remove(globalLeaf);
+        }
+
+        public void RemoveLink(Transition transition)
+        {
+            if(transition == null)
+                return;
+            if (!_transitions.Contains(transition))
+                return;
+
+            switch (transition.TransitionType)
+            {
+                case TransitionTypes.End:
+                    RemoveEndLink(transition.FromLeaf);
+                    break;
+                case TransitionTypes.Local:
+                    RemoveLink(transition.FromLeaf, transition.ToLeaf);
+                    break;
+                case TransitionTypes.Global:
+                    RemoveLink(transition.ToLeaf);
+                    break;
+            }
+        }
+
+        public void RemoveLink(int transitionIndex)
+        {
+            if (transitionIndex < 0 || transitionIndex >= _transitions.Count)
+            {
+                throw new IndexOutOfRangeException(
+                    $"{transitionIndex} out of range! Range is : 0 - {_transitions.Count}");
+            }
+
+            var t = _transitions[transitionIndex];
+            RemoveLink(t);
         }
 
         public ILeaf GetRunningLeaf() => RunningLeaf;
@@ -477,6 +537,13 @@ namespace BehaviourGraph.Trees
 
         public BehaviourMachine GetGraph() => _parentGraph;
 
+        public int GetLeafIndex(ILeaf leaf)
+        {
+            if (leaf == null)
+                return -1;
+            return _leafs.IndexOf(leaf);
+        }
+
         /// <summary>
         /// Force enter to Leaf. Find first leaf by T type. Only for this tree childs. 
         /// </summary>
@@ -500,12 +567,12 @@ namespace BehaviourGraph.Trees
                 return;
 
             var temporaryTransition = new Transition(null, RunningLeaf, _leafs[leafID],
-                ExecutingTypes.Infinity);
+                TransitionTypes.End, ExecutingTypes.Infinity);
             ChangeRunningLeaf(_leafs[leafID], temporaryTransition);
         }
 
         /// <summary>
-        /// Find a first child leaf by type.
+        /// Find a first child leaf by type. Searching in all hierarchy.
         /// </summary>
         /// <typeparam name="T"> is finding type</typeparam>
         /// <returns></returns>
@@ -527,42 +594,18 @@ namespace BehaviourGraph.Trees
         }
 
         /// <summary>
-        /// Find a first child leaf by friendly name.
+        /// Find a first child leaf by tag. Searching in all hierarchy.
         /// </summary>
-        /// <param name="friendlyName">Friendly name of a leaf.</param>
-        public ILeaf QLeaf(string friendlyName)
+        /// <param name="tag">Tag of a leaf.</param>
+        public ILeaf QLeaf(string tag)
         {
             foreach (var l in _leafs)
             {
-                if (string.Equals(l.FriendlyName, friendlyName))
+                if (string.Equals(l.Tag, tag))
                     return l;
                 if (l is ITree t)
                 {
-                    var r = t.QLeaf(friendlyName);
-                    if (r != null)
-                        return r;
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Find a first child leaf by type and tag.
-        /// </summary>
-        /// <param name="tag"> Tag name</param>
-        /// <typeparam name="T">Type of finding</typeparam>
-        /// <returns></returns>
-        public T QLeaf<T>(string tag) where T : class, ILeaf
-        {
-            foreach (var l in _leafs)
-            {
-                if (l is T tLeaf && string.Equals(l.Tag, tag))
-                    return tLeaf;
-
-                if (l is ITree t)
-                {
-                    var r = t.QLeaf<T>(tag);
+                    var r = t.QLeaf(tag);
                     if (r != null)
                         return r;
                 }
@@ -610,7 +653,7 @@ namespace BehaviourGraph.Trees
                     if (transition.ExecutedCondition == null)
                         RemoveEndLink(transition.FromLeaf);
                     //remove global link
-                    else if(transition.FromLeaf == null)
+                    else if (transition.FromLeaf == null)
                         RemoveLink(transition.ToLeaf);
                     //remove local link
                     else

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices.WindowsRuntime;
 using BehaviourGraph.Trees;
 using UnityEditor;
 using UnityEngine;
@@ -72,6 +73,8 @@ namespace BehaviourGraph
 
         public void SetGameobject(GameObject go)
         {
+            if(!go)
+                return;
             _gameObject = go;
         }
 
