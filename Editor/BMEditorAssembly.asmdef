@@ -2,7 +2,8 @@
     "name": "BMEditorAssembly",
     "rootNamespace": "",
     "references": [
-        "GUID:f9f7973fb8aa6724f947b44e5796fc50"
+        "GUID:f9f7973fb8aa6724f947b44e5796fc50",
+        "GUID:b7c441eb39fccb24496bee27c21ea71e"
     ],
     "includePlatforms": [
         "Editor"
