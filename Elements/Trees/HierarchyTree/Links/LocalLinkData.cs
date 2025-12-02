@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using BehaviourGraph.States;
 
 namespace BehaviourGraph.Trees
 {
     public class LocalLinkData
     {
-        public Dictionary<ILeaf, List<Transition>> toLeafsTransitions;
+        public Dictionary<IState, List<Transition>> toStatesTransitions;
     }
 }

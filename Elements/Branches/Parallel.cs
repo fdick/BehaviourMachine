@@ -1,35 +1,108 @@
-namespace BehaviourGraph.Trees
+using System;
+using BehaviourGraph.Trees;
+using UnityEngine;
+
+namespace BehaviourGraph.States
 {
-    public class Parallel : IBranch
+    public class Parallel : IState, IUpdatableState, IFixedUpdatableState, ILateUpdatableState, IEndableState
     {
-        public void StartBranch()
+        public string FriendlyName { get; set; }
+        public Guid ID { get; }
+        public string Tag { get; set; }
+        public Action<Transition> OnEnter { get; set; }
+        public Action OnExit { get; set; }
+
+        protected IState _mainState;
+        protected IState _parallelState;
+
+        public IState MainState => _mainState;
+        public IState ParallelState => _parallelState;
+        
+        public Parallel(Sequence mainState, Sequence parallelState)
         {
-            throw new System.NotImplementedException();
+            ID = Guid.NewGuid();
+            FriendlyName = nameof(Parallel);
+            
+            _mainState = mainState;
+            _parallelState = parallelState;
         }
 
-        public void OnUpdateBranch()
+        public void Enter(Transition transition = null)
         {
-            throw new System.NotImplementedException();
+            OnEnter?.Invoke(transition);
+            
+            _mainState.Enter(transition);
+            _parallelState.Enter();
         }
 
-        public void OnFixedUpdateBranch()
+        public void Exit()
         {
-            throw new System.NotImplementedException();
+            _mainState.Exit();
+            _parallelState.Exit();
+            
+            OnExit?.Invoke();
         }
 
-        public void OnLateUpdateBranch()
+        public void SetGameobject(GameObject go)
         {
-            throw new System.NotImplementedException();
+            return;
         }
 
-        void IBranch.OnStartBranch()
+        public bool CheckCD(float duration)
         {
-            throw new System.NotImplementedException();
+            return _mainState.CheckCD(duration);
         }
 
-        void IBranch.OnEndBranch()
+        public float GetRemainingCD()
         {
-            throw new System.NotImplementedException();
+            return _mainState.GetRemainingCD();
+        }
+
+        public void InitializeState()
+        {
+            _mainState.InitializeState();
+            _parallelState.InitializeState();
+        }
+
+        public void UpdateState()
+        {
+            if (_mainState is IUpdatableState u)
+                u.UpdateState();
+
+            if (_parallelState is IUpdatableState pu)
+                pu.UpdateState();
+        }
+
+        public void FixedUpdateState()
+        {
+            if (_mainState is IFixedUpdatableState u)
+                u.FixedUpdateState();
+
+            if (_parallelState is IFixedUpdatableState pu)
+                pu.FixedUpdateState();
+        }
+
+        public void LateUpdateState()
+        {
+            if (_mainState is ILateUpdatableState u)
+                u.LateUpdateState();
+
+            if (_parallelState is ILateUpdatableState pu)
+                pu.LateUpdateState();
+        }
+
+        public void Dispose()
+        {
+            _mainState.Dispose();
+            _parallelState.Dispose();
+        }
+
+        public UpdateStatus EndCondition()
+        {
+            if (_mainState is IEndableState eu)
+                return eu.EndCondition();
+
+            return UpdateStatus.Failure;
         }
     }
 }

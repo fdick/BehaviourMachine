@@ -6,7 +6,7 @@ namespace BehaviourGraph.Visualizer
     {
         public override string Visualize(ITree node)
         {
-            return $"Running Leaf: {node.GetRunningLeaf().FriendlyName}";
+            return $"Running Leaf: {node.GetRunningState().FriendlyName}";
         }
     }
 

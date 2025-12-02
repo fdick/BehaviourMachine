@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace BehaviourGraph.Conditions
 {
-    public interface ICondition : IForestObject
+    public interface ICondition : IPartOfMachine
     {
         public UpdateStatus ConditionUpdate();
     }

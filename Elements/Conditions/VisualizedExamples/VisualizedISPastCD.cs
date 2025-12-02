@@ -1,7 +1,5 @@
-using UnityEngine;
 using BehaviourGraph.Visualizer;
-using BehaviourGraph;
-using BehaviourGraph.Trees;
+using BehaviourGraph.States;
 
 namespace BehaviourGraph.Conditions
 {
@@ -11,9 +9,9 @@ namespace BehaviourGraph.Conditions
         public System.Single duration;
 
 
-        public override ICondition GetInstance(ITree tree)
+        public override ICondition GetInstance(Sequence seq)
         {
-            return new ISPastCD(tree.GetLeafs()[leaf_ID], duration);
+            return new ISPastCD(seq.GetStates()[leaf_ID], duration);
         }
     }
 }

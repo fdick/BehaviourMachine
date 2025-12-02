@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using BehaviourGraph.States;
 using UnityEngine;
 
 namespace BehaviourGraph.Debug
@@ -32,7 +33,7 @@ namespace BehaviourGraph.Debug
 
             int cTrees = GetCountTrees(_graph.MainTree);
             int cLeafs = GetCountLeafs(_graph.MainTree) - cTrees + 1; // +1 так как не следует считать рута
-            var cLinks = GetCountLinks(_graph.MainTree);
+            var cLinks = GetCountLinks(_graph.MainTree.GetStartableState() as Sequence);
             _graphInfo =
                 $"Count Leafs: {cLeafs} \nCount Trees: {cTrees} \n   Sum: {cLeafs + cTrees}\n----------------------\n";
             _graphInfo +=
@@ -84,10 +85,10 @@ namespace BehaviourGraph.Debug
         private void OnUpdate()
         {
             _runningBranchFullName = string.Empty;
-            _runningBranchFullName = GetHierarchyName(_graph.MainTree);
+            _runningBranchFullName = GetHierarchyName(_graph.MainTree.GetStartableState() as Sequence);
 
             _runningBranch.value = string.Empty;
-            _runningBranch.value = GetDebugInfoTreeRecursive(_graph.MainTree);
+            _runningBranch.value = GetDebugInfoTreeRecursive(_graph.MainTree.GetStartableState() as Sequence);
         }
 
         private void SetInspectors()
@@ -96,7 +97,8 @@ namespace BehaviourGraph.Debug
 
             //get all scripts which inherit from InspectorBase
             System.Type[] types = System.Reflection.Assembly.GetExecutingAssembly().GetTypes();
-            System.Type[] inherits = (from System.Type type in types where type.IsSubclassOf(typeof(InspectorBase)) select type).ToArray();
+            System.Type[] inherits =
+                (from System.Type type in types where type.IsSubclassOf(typeof(InspectorBase)) select type).ToArray();
 
             // i = 1 bcz first is Inspector<>, we dont need it
             for (int i = 1; i < inherits.Length; i++)
@@ -111,27 +113,24 @@ namespace BehaviourGraph.Debug
         }
 
         //recursive
-        private string GetHierarchyName(ITree tree, ITree beforePoint = null)
+        private string GetHierarchyName(Sequence seq, Sequence beforePoint = null)
         {
-            if (tree == null)
+            if (seq == null)
                 return null;
 
             var returnString = string.Empty;
 
-            returnString += " / " + tree.FriendlyName;
+            returnString += " / " + seq.FriendlyName;
 
-            if (tree is HierarchyTree)
-            {
-                if (tree.GetRunningLeaf() is ITree && (beforePoint == null || tree != beforePoint))
-                    returnString += GetHierarchyName(tree.GetRunningLeaf() as ITree);
-                else if (tree.GetRunningLeaf() is ILeaf)
-                    returnString += " / " + tree.GetRunningLeaf().FriendlyName;
-            }
-
+            if (seq.RunningState is Sequence && (beforePoint == null || seq != beforePoint))
+                returnString += GetHierarchyName(seq.RunningState as Sequence);
+            else if (seq.RunningState is IState)
+                returnString += " / " + seq.RunningState.FriendlyName;
+            
             return returnString;
         }
 
-        private string GetDebugInfoTreeRecursive(ITree tree)
+        private string GetDebugInfoTreeRecursive(Sequence tree)
         {
             if (tree == null)
                 return null;
@@ -147,7 +146,7 @@ namespace BehaviourGraph.Debug
             returnString += str + "\n\n\n";
 
             //if running leaf is tree
-            if (tree.GetRunningLeaf() is ITree childTree)
+            if (tree.RunningState is Sequence childTree)
                 returnString += GetDebugInfoTreeRecursive(childTree);
 
             return returnString;
@@ -155,6 +154,11 @@ namespace BehaviourGraph.Debug
 
         private object GetInspectorRecursive(Type key)
         {
+            if (key == null)
+            {
+                UnityEngine.Debug.LogError("Key is null!");
+            }
+
             if (!_inspectors.TryGetValue(key, out var inspector))
                 inspector = GetInspectorRecursive(key.BaseType);
             return inspector;
@@ -167,8 +171,8 @@ namespace BehaviourGraph.Debug
 
         private int GetCountLeafs(ITree tree)
         {
-            int countLeafs = tree.GetLeafs().Length;
-            foreach (var l in tree.GetLeafs())
+            int countLeafs = tree.GetStates().Length;
+            foreach (var l in tree.GetStates())
             {
                 if (l is ITree localTree)
                     countLeafs += GetCountLeafs(localTree);
@@ -180,7 +184,7 @@ namespace BehaviourGraph.Debug
         private int GetCountTrees(ITree tree)
         {
             int countTrees = 1;
-            foreach (var l in tree.GetLeafs())
+            foreach (var l in tree.GetStates())
             {
                 if (l is ITree localTree)
                     countTrees += GetCountTrees(localTree);
@@ -189,14 +193,16 @@ namespace BehaviourGraph.Debug
             return countTrees;
         }
 
-        private Vector3Int GetCountLinks(HierarchyTree tree)
+        private Vector3Int GetCountLinks(Sequence seq)
         {
-            Vector3Int countLinks = new Vector3Int(tree.LocalLinks.Count, tree.EndLinks.Count, tree.GlobalLinks.Count);
+            if (seq == null)
+                return Vector3Int.zero;
+            Vector3Int countLinks = new Vector3Int(seq.LocalLinks.Count, seq.EndLinks.Count, seq.GlobalLinks.Count);
 
-            foreach (var l in tree.Leafs)
+            foreach (var l in seq.GetStates())
             {
-                if (l is HierarchyTree localTree)
-                    countLinks += GetCountLinks(localTree);
+                if (l is Sequence localSequence)
+                    countLinks += GetCountLinks(localSequence);
             }
 
             return countLinks;
@@ -205,7 +211,7 @@ namespace BehaviourGraph.Debug
         private void InitBreakpoint()
         {
             //find all breakpoint
-            var brps = GetBreakpoints(_graph.MainTree);
+            var brps = GetBreakpoints(_graph.MainTree.GetStartableState() as Sequence);
 
             if (brps == null)
             {
@@ -222,22 +228,22 @@ namespace BehaviourGraph.Debug
             }
         }
 
-        private List<IDebugable> GetBreakpoints(ITree tree)
+        private List<IDebugable> GetBreakpoints(Sequence seq)
         {
-            var leafs = tree.GetLeafs();
+            var leafs = seq.GetStates();
             if (leafs.Length == 0)
                 return null;
 
             var brps = new List<IDebugable>();
             //check myself
-            if (tree is IDebugable treeB)
+            if (seq is IDebugable treeB)
                 brps.Add(treeB);
 
             for (int i = 0; i < leafs.Length; i++)
             {
                 var l = leafs[i];
 
-                if (l is ITree t)
+                if (l is Sequence t)
                     brps.AddRange(GetBreakpoints(t));
             }
 

@@ -7,17 +7,17 @@ namespace BehaviourGraph
 {
     public class BehaviourMachine : MonoBehaviour
     {
-        [Space] [SerializeField] private bool _initOnAwake = false;
+        [Space] [SerializeField] private bool _initOnAwake = true;
         [field: SerializeField] public GameObject CustomGameobject { get; private set; }
-        [field: SerializeField] public VisualizedEmptyHierarchyTree VisualizedTree { get; set; }
+        [field: SerializeField] public VisualizedOakTree VisualizedTree { get; set; }
         [field: SerializeField] public GraphStatuses GraphStatus { get; private set; }
 
-        public HierarchyTree MainTree { get; private set; }
+        public ITree MainTree { get; private set; }
         private const string VIS_ROOT_TREE_NAME = "VisualizedRootTree";
         private const string ROOT_TREE = "RootTree";
 
 #if UNITY_EDITOR
-        [field: Space] [field: SerializeField] public DebugModes DebugMode { get; private set; }
+        [field: Space] [field: SerializeField] public DebugModes DebugMode { get; private set; } = DebugModes.Enabled;
         [SerializeField] private Debug.GraphDebuger _debug;
 #endif
 
@@ -81,24 +81,24 @@ namespace BehaviourGraph
 
         public void OnEnable()
         {
-            if (MainTree?.RunningLeaf == null)
+            if (MainTree?.GetRunningState() == null)
                 return;
 
             UnPauseGraph();
 
             //restart last activated branch
 
-            var last = GetLastHierarchyTree(MainTree.RunningLeaf as HierarchyTree);
-
-            if (last == null) return;
-            last.ForceEnter(last.GetLeafIndex(last.RunningLeaf));
+            // var last = GetLastHierarchyTree(MainTree.GetRunningState());
+            //
+            // if (last == null) return;
+            // last.ForceEnter(last.GetLeafIndex(last.RunningLeaf));
         }
 
         public void StartGraph()
         {
             if (GraphStatus != GraphStatuses.Inited && GraphStatus != GraphStatuses.Ended)
                 return;
-            if (MainTree.Leafs.Count == 0 || MainTree.StartableLeaf == null)
+            if (MainTree.GetStates().Length == 0 || MainTree.GetStartableState() == null)
                 return;
 #if UNITY_EDITOR
             if (DebugMode >= DebugModes.Enabled)
@@ -121,7 +121,7 @@ namespace BehaviourGraph
                 return;
             if (GraphStatus == GraphStatuses.Paused)
                 UnPauseGraph();
-            MainTree.EndTree();
+            MainTree.StopTree();
             GraphStatus = GraphStatuses.Ended;
         }
 
@@ -175,20 +175,20 @@ namespace BehaviourGraph
 
             if (VisualizedTree != null)
             {
-                MainTree = (HierarchyTree)VisualizedTree.GetInstance(this);
+                MainTree = VisualizedTree.GetInstance(this);
 
                 if (MainTree == null)
                     UnityEngine.Debug.LogError("Init visualized tree has errors!");
                 MainTree.FriendlyName = ROOT_TREE;
 
-                for (int i = 0; i < MainTree.Leafs.Count; i++)
+                for (int i = 0; i < MainTree.GetStates().Length; i++)
                 {
-                    MainTree.Leafs[i].InitLeaf();
+                    MainTree.GetStates()[i].InitializeState();
                 }
             }
             else
             {
-                MainTree = new HierarchyTree(this);
+                MainTree = new OakTree(this);
             }
 
             GraphStatus = GraphStatuses.Inited;
@@ -216,24 +216,25 @@ namespace BehaviourGraph
                 return;
 
             MainTree.LateUpdateTree();
+            MainTree.EndCondition();
         }
 
-        public HierarchyTree GetLastHierarchyTree(HierarchyTree tree)
-        {
-            if (tree == null)
-                return null;
-
-            if (tree.RunningLeaf == null)
-                return tree;
-
-            if (tree.GetRunningLeaf() is HierarchyTree t)
-            {
-                return GetLastHierarchyTree(t);
-            }
-
-
-            return tree;
-        }
+        // public HierarchyTree GetLastHierarchyTree(ITree tree)
+        // {
+        //     if (tree == null)
+        //         return null;
+        //
+        //     if (tree.GetRunningState() == null)
+        //         return tree;
+        //
+        //     if (tree.GetRunningState() is HierarchyTree t)
+        //     {
+        //         return GetLastHierarchyTree(t);
+        //     }
+        //
+        //
+        //     return tree;
+        // }
 
         [InspectorButton("Init Visualized Root Tree")]
         public void PrepareHierarchy()
@@ -241,8 +242,8 @@ namespace BehaviourGraph
             if (!transform.Find(VIS_ROOT_TREE_NAME))
             {
                 var root = new GameObject(VIS_ROOT_TREE_NAME);
-                VisualizedEmptyHierarchyTree visTree =
-                    (VisualizedEmptyHierarchyTree)root.AddComponent(typeof(VisualizedEmptyHierarchyTree));
+                VisualizedOakTree visTree =
+                    (VisualizedOakTree)root.AddComponent(typeof(VisualizedOakTree));
                 root.transform.SetParent(transform);
                 root.transform.localPosition = Vector3.zero;
                 visTree.FriendlyName = ROOT_TREE;

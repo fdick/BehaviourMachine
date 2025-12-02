@@ -42,7 +42,7 @@ namespace BehaviourGraph.Editor
                 EditorGUILayout.PropertyField(fromsProp, new GUIContent("Froms"));
 
             EditorGUILayout.PropertyField(toProp, new GUIContent("To"));
-            if (vLink.linkType != LinkType.Ended)
+            if (vLink.linkType != LinkType.HasEnded)
                 EditorGUILayout.PropertyField(conditionProp, new GUIContent("Condition"));
 
             Separator("Transition Executes");

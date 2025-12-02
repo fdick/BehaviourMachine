@@ -1,5 +1,5 @@
 ﻿using System;
-using BehaviourGraph.Leafs;
+using BehaviourGraph.States;
 using UnityEngine;
 
 namespace BehaviourGraph.Trees
@@ -9,8 +9,8 @@ namespace BehaviourGraph.Trees
     /// The branch contains one main process and may contains two or more processes that will run simultaneously
     /// and in parallel with the main process. The tree will end when the main process ends. Can be a leaf and a tree. Need dispose after finishing.
     /// </summary>
-    public class ParallelBranch : ParallelTree, ILeaf, IUpdatableLeaf, IFixedUpdatableLeaf, ILateUpdatableLeaf,
-        IDisposable, IEndableLeaf
+    public class ParallelBranch : ParallelTree, ILeaf, IUpdatableState, IFixedUpdatableState, ILateUpdatableState,
+        IDisposable, IEndableState
     {
         public ParallelBranch(BehaviourMachine graph, ILeaf mainLeaf, params ILeaf[] parallelLeafs) : base(graph,
             mainLeaf, parallelLeafs)
@@ -24,7 +24,7 @@ namespace BehaviourGraph.Trees
         private float _lastProcCD;
         private Transition _executedTransition;
 
-        private IEndableLeaf _endableMainLeaf;
+        private IEndableState _endableMainState;
 
 
         /// <summary>
@@ -34,8 +34,8 @@ namespace BehaviourGraph.Trees
         {
             AwakeTree();
 
-            if (_mainLeaf is IEndableLeaf end)
-                _endableMainLeaf = end;
+            if (_mainLeaf is IEndableState end)
+                _endableMainState = end;
         }
 
         public void EnterLeaf(Transition transition = null)
@@ -46,7 +46,7 @@ namespace BehaviourGraph.Trees
 
             if (transition != null && transition.CooldownDuration > 0)
             {
-                if (transition.CooldownType == CoolDownTypes.OnEnterDestinationLeaf)
+                if (transition.CooldownType == CoolDownTypes.OnEnterDestinationState)
                     transition.SetCooldownTime();
                 else
                     _executedTransition = transition;
@@ -57,7 +57,7 @@ namespace BehaviourGraph.Trees
         {
             if (_executedTransition != null && _executedTransition.CooldownDuration > 0)
             {
-                if (_executedTransition.CooldownType == CoolDownTypes.OnExitDestinationLeaf)
+                if (_executedTransition.CooldownType == CoolDownTypes.OnExitDestinationState)
                 {
                     _executedTransition.SetCooldownTime();
                     _executedTransition = null;
@@ -66,25 +66,25 @@ namespace BehaviourGraph.Trees
 
 
             OnExitBranch();
-            EndTree();
+            StopTree();
             _lastProcCD = Time.time;
             OnExit?.Invoke();
         }
 
 
-        public void UpdateLeaf()
+        public void UpdateState()
         {
             UpdateTree();
             OnUpdateBranch();
         }
 
-        public void FixedUpdateLeaf()
+        public void FixedUpdateState()
         {
             FixedUpdateTree();
             OnFixedUpdateBranch();
         }
 
-        public void LateUpdateLeaf()
+        public void LateUpdateState()
         {
             LateUpdateTree();
             OnLateUpdateBranch();
@@ -125,8 +125,8 @@ namespace BehaviourGraph.Trees
 
         public UpdateStatus EndCondition()
         {
-            if (_endableMainLeaf != null)
-                return _endableMainLeaf.EndCondition();
+            if (_endableMainState != null)
+                return _endableMainState.EndCondition();
             else
                 return UpdateStatus.Failure;
         }

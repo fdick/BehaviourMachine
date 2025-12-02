@@ -1,17 +1,16 @@
-using BehaviourGraph;
-using BehaviourGraph.Conditions;
+using BehaviourGraph.States;
 
 namespace BehaviourGraph.Conditions
 {
     public class ISPastCD : Condition
     {
-        public ISPastCD(ILeaf leaf, float duration)
+        public ISPastCD(IState leaf, float duration)
         {
             _leaf = leaf;
             _duration = duration;
         }
 
-        private ILeaf _leaf;
+        private IState _leaf;
         private float _duration;
 
         public override UpdateStatus ConditionUpdate()

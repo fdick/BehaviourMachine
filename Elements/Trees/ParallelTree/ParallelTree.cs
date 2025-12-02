@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BehaviourGraph.Leafs;
+using BehaviourGraph.States;
 using UnityEditor;
 
 namespace BehaviourGraph.Trees
@@ -20,7 +20,7 @@ namespace BehaviourGraph.Trees
 
             foreach (var p in parallelLeafs)
             {
-                if (p is IEndableLeaf ep)
+                if (p is IEndableState ep)
                     UnityEngine.Debug.LogWarning(
                         $"{FriendlyName} is parallel Tree! And it is not support Endable Leaf - {p.FriendlyName}! ");
             }
@@ -39,6 +39,30 @@ namespace BehaviourGraph.Trees
 
         public bool IsPaused { get; private set; }
         public UpdateStatus Status { get; private set; } = UpdateStatus.Failure;
+        public void AddState(IState state)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveState(IState leaf)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IState GetRunningState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IState GetStartableState()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IState[] GetStates()
+        {
+            throw new NotImplementedException();
+        }
 
 
         protected ILeaf _mainLeaf;
@@ -55,12 +79,17 @@ namespace BehaviourGraph.Trees
             }
         }
 
+        public void InitTree()
+        {
+            throw new NotImplementedException();
+        }
+
         public void StartTree()
         {
             foreach (var l in _parallelLeafs)
                 l.EnterLeaf();
 
-            _mainLeaf.EnterLeaf();
+            _mainLeaf. EnterLeaf();
         }
 
         public void UpdateTree()
@@ -70,14 +99,14 @@ namespace BehaviourGraph.Trees
             if (_mainLeaf == null)
                 return;
 
-            if (_mainLeaf is IUpdatableLeaf updatable)
+            if (_mainLeaf is IUpdatableState updatable)
             {
-                updatable.UpdateLeaf();
+                updatable.UpdateState();
             }
 
             foreach (var l in _parallelLeafs)
-                if (l is IUpdatableLeaf pfu)
-                    pfu.UpdateLeaf();
+                if (l is IUpdatableState pfu)
+                    pfu.UpdateState();
         }
 
         public void FixedUpdateTree()
@@ -87,44 +116,44 @@ namespace BehaviourGraph.Trees
             if (_mainLeaf == null)
                 return;
 
-            if (_mainLeaf is IFixedUpdatableLeaf fixedUpdatable)
+            if (_mainLeaf is IFixedUpdatableState fixedUpdatable)
             {
-                fixedUpdatable.FixedUpdateLeaf();
+                fixedUpdatable.FixedUpdateState();
             }
 
             foreach (var l in _parallelLeafs)
-                if (l is IFixedUpdatableLeaf pfu)
-                    pfu.FixedUpdateLeaf();
+                if (l is IFixedUpdatableState pfu)
+                    pfu.FixedUpdateState();
         }
 
-        public UpdateStatus LateUpdateTree()
+        public void LateUpdateTree()
         {
-            if (IsPaused)
-                return UpdateStatus.Failure;
+            // if (IsPaused)
+                // return UpdateStatus.Failure;
 
             //late update
-            if (_mainLeaf is ILateUpdatableLeaf lateUpdatable)
+            if (_mainLeaf is ILateUpdatableState lateUpdatable)
             {
-                lateUpdatable.LateUpdateLeaf();
+                lateUpdatable.LateUpdateState();
             }
 
             foreach (var l in _parallelLeafs)
-                if (l is ILateUpdatableLeaf pfu)
-                    pfu.LateUpdateLeaf();
+                if (l is ILateUpdatableState pfu)
+                    pfu.LateUpdateState();
 
             UpdateStatus treeStatus = UpdateStatus.Running;
 
             //end update
-            if (_mainLeaf is IEndableLeaf endable)
+            if (_mainLeaf is IEndableState endable)
             {
                 treeStatus = endable.EndCondition();
             }
 
             Status = treeStatus;
-            return treeStatus;
+            // return treeStatus;
         }
 
-        public void EndTree()
+        public void StopTree()
         {
             foreach (var l in _parallelLeafs)
                 l.ExitLeaf();
@@ -182,48 +211,67 @@ namespace BehaviourGraph.Trees
         }
 
         public BehaviourMachine GetGraph() => _graph;
+        public T QState<T>() where T : class, IState
+        {
+            throw new NotImplementedException();
+        }
+
+        public IState QState(string tag)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Find a first parallel child leaf by type. Searching in all hierarchy.
         /// </summary>
         /// <typeparam name="T"> is finding type</typeparam>
         /// <returns></returns>
-        public T QLeaf<T>() where T : class, ILeaf
-        {
-            foreach (var l in _parallelLeafs)
-            {
-                if (l is T tLeaf)
-                    return tLeaf;
-                if (l is ITree t)
-                {
-                    var r = t.QLeaf<T>();
-                    if (r != null)
-                        return r;
-                }
-            }
+        // public T QState<T>() where T : class, ILeaf
+        // {
+        //     foreach (var l in _parallelLeafs)
+        //     {
+        //         if (l is T tLeaf)
+        //             return tLeaf;
+        //         if (l is ITree t)
+        //         {
+        //             var r = t.QState<T>();
+        //             if (r != null)
+        //                 return r;
+        //         }
+        //     }
+        //
+        //     return null;
+        // }
+        //
+        // /// <summary>
+        // /// Find a first parallel child leaf by tag. Searching in all hierarchy.
+        // /// </summary>
+        // /// <param name="tag">Tag of a leaf.</param>
+        // public ILeaf QState(string tag)
+        // {
+        //     foreach (var l in _parallelLeafs)
+        //     {
+        //         if (string.Equals(l.Tag, tag))
+        //             return l;
+        //         if (l is ITree t)
+        //         {
+        //             var r = t.QState(tag);
+        //             if (r != null)
+        //                 return r;
+        //         }
+        //     }
+        //
+        //     return null;
+        // }
 
-            return null;
+        public void Dispose()
+        {
+            // TODO release managed resources here
         }
 
-        /// <summary>
-        /// Find a first parallel child leaf by tag. Searching in all hierarchy.
-        /// </summary>
-        /// <param name="tag">Tag of a leaf.</param>
-        public ILeaf QLeaf(string tag)
+        public UpdateStatus EndCondition()
         {
-            foreach (var l in _parallelLeafs)
-            {
-                if (string.Equals(l.Tag, tag))
-                    return l;
-                if (l is ITree t)
-                {
-                    var r = t.QLeaf(tag);
-                    if (r != null)
-                        return r;
-                }
-            }
-
-            return null;
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,24 +1,32 @@
+using System;
+using BehaviourGraph.States;
+
 namespace BehaviourGraph.Trees
 {
-    public interface ITree : IForestObject
+    public interface ITree : IPartOfMachine, IEndableState, IDisposable
     {
-        public void AwakeTree();
+        public void InitTree();
+        
         public void StartTree();
+        public void StopTree();
+        
         public void UpdateTree();
         public void FixedUpdateTree();
-        public UpdateStatus LateUpdateTree();
-        public void EndTree();
+        public void LateUpdateTree();
+        
         public void PauseTree();
         public void UnPauseTree();
         public bool IsPaused { get; }
+
+        
         public UpdateStatus Status { get; }
-        public void AddLeaf(ILeaf leaf);
-        public void RemoveLeaf(ILeaf leaf);
-        public ILeaf GetRunningLeaf();
-        public ILeaf GetStartableLeaf();
-        public ILeaf[] GetLeafs();
+        public void AddState(IState state);
+        public void RemoveState(IState leaf);
+        public IState GetRunningState();
+        public IState GetStartableState();
+        public IState[] GetStates();
         public BehaviourMachine GetGraph();
-        public T QLeaf<T>() where T : class, ILeaf;
-        public ILeaf QLeaf(string tag);
+        public T QState<T>() where T : class, IState;
+        public IState QState(string tag);
     }
 }

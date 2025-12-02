@@ -1,0 +1,134 @@
+﻿using BehaviourGraph.Trees;
+using System;
+using BehaviourGraph.States;
+
+namespace BehaviourGraph.Visualizer
+{
+    public class SequenceInspector : Inspector<Sequence>
+    {
+        public override string Visualize(Sequence tree)
+        {
+             if (tree == null || tree.RunningState == null)
+                return null;
+
+            var returnString = string.Empty;
+
+            //1 stroke
+            string text;
+            returnString += tree.FriendlyName;
+            returnString += "\n----------------------------------------\n";
+
+            //running leaf
+            returnString += $"RUNNING STATE - {tree.RunningState.FriendlyName}\n\n";
+
+            //global links
+            string label = "Global Links \n";
+            label = label.ToUpper();
+            returnString += label;
+
+            int it = 0;
+            foreach (var l in tree.GlobalLinks)
+            {
+                it++;
+                returnString += it + ". To " + l.Key.FriendlyName + "\n";
+
+                if (l.Value.toStateTransitions.Count > 0)
+                {
+                    int i = 0;
+                    foreach (var c in l.Value.toStateTransitions)
+                    {
+                        i++;
+                        text = "     " + i + ". " + c.ExecutedCondition.FriendlyName;
+
+                        UpdateStatus status;
+                        try
+                        {
+                            status = c.ExecutedCondition.ConditionUpdate();
+                        }
+                        catch (Exception)
+                        {
+                            status = UpdateStatus.Failure;
+                        }
+
+                        returnString += InsertStatus(text, status, 55) + "\n";
+                    }
+                }
+            }
+
+            returnString += "\n";
+
+            //local links
+            label = "Local Links \n";
+            label = label.ToUpper();
+            returnString += label;
+
+            if (tree.LocalLinks.TryGetValue(tree.RunningState, out var d))
+            {
+                it = 0;
+                foreach (var l in d.toStatesTransitions)
+                {
+                    it++;
+                    returnString += it + ". To " + l.Key.FriendlyName + "\n";
+
+                    if (l.Value.Count > 0)
+                    {
+                        int i = 0;
+                        foreach (var c in l.Value)
+                        {
+                            i++;
+                            text = "     " + i + ". " + c.ExecutedCondition.FriendlyName;
+                            UpdateStatus status;
+                            try
+                            {
+                                status = c.ExecutedCondition.ConditionUpdate();
+                            }
+                            catch (Exception)
+                            {
+                                status = UpdateStatus.Failure;
+                            }
+                            returnString += InsertStatus(text, status, 55) + "\n";
+                        }
+                    }
+                }
+            }
+
+            returnString += "\n";
+
+
+            label = "End Link \n";
+            label = label.ToUpper();
+            returnString += label;
+            //ended link
+            if (tree.EndLinks.TryGetValue(tree.RunningState, out var state))
+            {
+                var endableState = tree.RunningState as IEndableState;   
+                text = "     " + "To " + state.toStateTransition.ToState.FriendlyName;
+                returnString += InsertStatus(
+                    text,
+                    endableState.EndCondition(),
+                    30);
+            }
+
+            returnString += "\n----------------------------------------\n";
+
+            return returnString;
+        }
+        
+        private string InsertStatus(string modifyableText, UpdateStatus status, int offset)
+        {
+            var deltaOfsset = offset - modifyableText.Length;
+            if (deltaOfsset < 0)
+                deltaOfsset = 0;
+            else
+            {
+                for (int i = 0; i < deltaOfsset; i++)
+                    modifyableText += " ";
+            }
+
+            modifyableText += "| " + status;
+
+            return modifyableText;
+        }
+    }
+
+}

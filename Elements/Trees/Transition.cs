@@ -1,6 +1,6 @@
 using System;
 using BehaviourGraph.Conditions;
-using UnityEditor;
+using BehaviourGraph.States;
 using UnityEngine;
 
 namespace BehaviourGraph.Trees
@@ -19,19 +19,19 @@ namespace BehaviourGraph.Trees
 
     public enum CoolDownTypes
     {
-        OnEnterDestinationLeaf,
-        OnExitDestinationLeaf,
+        OnEnterDestinationState,
+        OnExitDestinationState,
     }
 
     public class Transition
     {
-        public Transition(ICondition executedCondition, ILeaf fromLeaf, ILeaf toLeaf, TransitionTypes transitionType,
+        public Transition(ICondition executedCondition, IState fromState, IState toState, TransitionTypes transitionType,
             ExecutingTypes executingType, int maxExecuteQuantities = 1, 
-            float cooldownDuration = 0, CoolDownTypes cooldownType = CoolDownTypes.OnExitDestinationLeaf)
+            float cooldownDuration = 0, CoolDownTypes cooldownType = CoolDownTypes.OnExitDestinationState)
         {
             this.ExecutedCondition = executedCondition;
-            this.FromLeaf = fromLeaf;
-            this.ToLeaf = toLeaf;
+            this.FromState = fromState;
+            this.ToState = toState;
             this.TransitionType = transitionType;
             this.ExecutingType = executingType;
             this.MaxExecuteQuantities = maxExecuteQuantities;
@@ -44,8 +44,8 @@ namespace BehaviourGraph.Trees
 
         public TransitionTypes TransitionType { get; }
         public ICondition ExecutedCondition { get; }
-        public ILeaf FromLeaf { get; set; }
-        public ILeaf ToLeaf { get; set; }
+        public IState FromState { get; set; }
+        public IState ToState { get; set; }
 
         public ExecutingTypes ExecutingType { get; }
         public int MaxExecuteQuantities { get; }
